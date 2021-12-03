@@ -1,0 +1,6 @@
+.vscode
+.github
+/bot
+*.json
+/logs
+*.sql
