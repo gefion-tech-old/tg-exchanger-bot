@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/nsqstore"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -26,6 +26,8 @@ func Init(c *config.Config) AppI {
 }
 
 func (a *App) Start(ctx context.Context) error {
+	errs, ctx := errgroup.WithContext(ctx)
+
 	botAPI, err := tgbotapi.NewBotAPI(a.config.Bot.Token)
 	if err != nil {
 		return err
@@ -36,21 +38,22 @@ func (a *App) Start(ctx context.Context) error {
 	// Инициализация модуля работы с API сервера
 	sAPI := api.Init(&a.config.API)
 
-	mEventConsumer, err := nsqstore.Init(&a.config.NSQ, "verification-code", "telegram")
+	// Инициализирую модуль бота
+	bot := bot.Init(botAPI, sAPI)
+
+	// Инициализирую всех NSQ потребителей
+	bConsumers, teardown, err := nsqstore.Init(&a.config.NSQ)
 	if err != nil {
 		return err
 	}
-	mEventConsumer.AddHandler(&nsqstore.EventsHandler{BotAPI: botAPI})
-	defer mEventConsumer.Stop()
+	defer teardown(bConsumers.Verification)
 
-	go func() {
-		for {
-			mEventConsumer.ConnectToNSQLookupd(fmt.Sprintf("%s:%d", a.config.NSQ.Host, a.config.NSQ.Port))
-		}
-	}()
+	// Подключаю всех NSQ потребителей
+	bot.ConnectNsqConsumers(bConsumers)
 
-	// Инициализирую модуль бота
-	bot := bot.Init(botAPI, sAPI)
-	return bot.MessageEventHandler(ctx)
+	// Запуск обработчиков всех событий
+	errs.Go(func() error { return bot.HandleNsqEvent(bConsumers.Verification, &a.config.NSQ) })
+	errs.Go(func() error { return bot.HandleBotEvent(ctx) })
 
+	return errs.Wait()
 }

@@ -7,8 +7,29 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
+type BotConsumers struct {
+	Verification *nsq.Consumer
+}
+
+func Init(cnf *config.NsqConfig) (*BotConsumers, func(...*nsq.Consumer), error) {
+	vConsumer, err := configure(cnf, "verification-code", "telegram")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &BotConsumers{
+			Verification: vConsumer,
+		}, func(c ...*nsq.Consumer) {
+			if len(c) > 0 {
+				for _, consumer := range c {
+					consumer.Stop()
+				}
+			}
+		}, nil
+}
+
 // Инициализации NSQ потребителя
-func Init(config *config.NsqConfig, topic, channel string) (*nsq.Consumer, error) {
+func configure(config *config.NsqConfig, topic, channel string) (*nsq.Consumer, error) {
 	c := nsq.NewConfig()
 	c.MaxAttempts = 10
 	c.MaxInFlight = 5

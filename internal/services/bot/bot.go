@@ -2,10 +2,16 @@ package bot
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/commands"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/nsqstore"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/nsqio/go-nsq"
 )
 
 type Bot struct {
@@ -15,9 +21,17 @@ type Bot struct {
 
 type BotI interface {
 	/*
-		Метод слушатель входящих событий
+		Метод слушатель входящих сообщений из очереди
 	*/
-	MessageEventHandler(ctx context.Context) error
+	HandleNsqEvent(consumer *nsq.Consumer, cnf *config.NsqConfig) error
+	/*
+		Метод слушатель входящих событий в telegram
+	*/
+	HandleBotEvent(ctx context.Context) error
+	/*
+		Коннектор всех nsq потребителей
+	*/
+	ConnectNsqConsumers(bConsumers *nsqstore.BotConsumers)
 }
 
 func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI) BotI {
@@ -27,7 +41,19 @@ func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI) BotI {
 	}
 }
 
-func (bot *Bot) MessageEventHandler(ctx context.Context) error {
+func (bot *Bot) ConnectNsqConsumers(bConsumers *nsqstore.BotConsumers) {
+	bConsumers.Verification.AddHandler(bot)
+}
+
+func (bot *Bot) HandleNsqEvent(consumer *nsq.Consumer, cnf *config.NsqConfig) error {
+	for {
+		if err := consumer.ConnectToNSQLookupd(fmt.Sprintf("%s:%d", cnf.Host, cnf.Port)); err != nil {
+			return err
+		}
+	}
+}
+
+func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
@@ -56,5 +82,18 @@ func (bot *Bot) MessageEventHandler(ctx context.Context) error {
 			}
 		}
 	}
+	return nil
+}
+
+// Метод слушатель
+func (bot *Bot) HandleMessage(m *nsq.Message) error {
+	msgEvent := models.MessageEvent{}
+
+	if err := json.Unmarshal(m.Body, &msgEvent); err != nil {
+		return err
+	}
+
+	msg := tgbotapi.NewMessage(msgEvent.To.ChatID, msgEvent.Message.Text)
+	bot.botAPI.Send(msg)
 	return nil
 }
