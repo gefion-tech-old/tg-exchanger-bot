@@ -2,11 +2,9 @@ package bot
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
-	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/commands"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/nsqstore"
@@ -73,7 +71,7 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			}
 
 			switch update.Message.Text {
-			case commands.START:
+			case commands.START__CMD:
 				go func() {
 					bot.cmd.User().Start(ctx, update)
 				}()
@@ -82,18 +80,5 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			}
 		}
 	}
-	return nil
-}
-
-// Метод слушатель
-func (bot *Bot) HandleMessage(m *nsq.Message) error {
-	msgEvent := models.MessageEvent{}
-
-	if err := json.Unmarshal(m.Body, &msgEvent); err != nil {
-		return err
-	}
-
-	msg := tgbotapi.NewMessage(msgEvent.To.ChatID, msgEvent.Message.Text)
-	bot.botAPI.Send(msg)
 	return nil
 }

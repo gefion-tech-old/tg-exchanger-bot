@@ -5,13 +5,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-const (
-	START  = `/start`
-	HELP   = `/help`
-	AUTH   = `/auth`
-	WHOAME = `/whoami`
-)
-
 type Commands struct {
 	botAPI       *tgbotapi.BotAPI
 	sAPI         api.ApiI

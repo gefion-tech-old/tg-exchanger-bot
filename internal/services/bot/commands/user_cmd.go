@@ -8,6 +8,7 @@ import (
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/btns"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/valyala/fasthttp"
 )
@@ -44,8 +45,10 @@ func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) {
 	switch resp.StatusCode() {
 	case http.StatusCreated:
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Привет, %s!\nВы успешно зарегестрировались в боте.", update.Message.From.FirstName))
+		msg.ReplyMarkup = btns.UserKeyboard
 	case http.StatusUnprocessableEntity:
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("С возвращением, %s!", update.Message.From.FirstName))
+		msg.ReplyMarkup = btns.UserKeyboard
 	default:
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Какая-то ошибка")
 	}
