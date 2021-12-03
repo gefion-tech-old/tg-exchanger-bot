@@ -18,7 +18,7 @@ type ApiConfig struct {
 
 type NsqConfig struct {
 	Host string `toml:"host"`
-	Port uint16 `toml:"port"`
+	Port int    `toml:"port"`
 }
 
 type GeneralConfig struct {

@@ -17,7 +17,7 @@ type BotI interface {
 	/*
 		Метод слушатель входящих событий
 	*/
-	EventHandler(ctx context.Context) error
+	MessageEventHandler(ctx context.Context) error
 }
 
 func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI) BotI {
@@ -27,7 +27,7 @@ func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI) BotI {
 	}
 }
 
-func (bot *Bot) EventHandler(ctx context.Context) error {
+func (bot *Bot) MessageEventHandler(ctx context.Context) error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
