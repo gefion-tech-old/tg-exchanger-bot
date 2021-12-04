@@ -1,0 +1,13 @@
+[bot]
+token = "2126215860:AAFG2mvnRYojY17lJPsqYwz2yhyszoJOBfY"
+debug = false
+
+[api]
+url = "http://80.78.253.68:4000"
+
+[nsq]
+host = "80.78.253.68"
+port = 4161
+
+[general]
+cores = 2
