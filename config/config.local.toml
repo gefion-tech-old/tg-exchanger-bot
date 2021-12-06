@@ -1,12 +1,12 @@
 [bot]
-token = "2126215860:AAFG2mvnRYojY17lJPsqYwz2yhyszoJOBfY"
+token = "1955699495:AAEGFazEMR6nsfcwM3aQwiQAfHxmFOewkHw"
 debug = false
 
 [api]
 url = "http://127.0.0.1:4000"
 
 [nsq]
-host = "127.0.0.1"
+host = "80.78.253.68"
 port = 4161
 
 [general]

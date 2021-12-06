@@ -7,19 +7,29 @@ import (
 type Api struct {
 	config  *config.ApiConfig
 	userReq *UserRequests
+	msgReq  *MessageRequests
 }
 
 type ApiI interface {
-	/*
-		Сботка методов для работы с пользователскими данными и аккаунтом
-	*/
 	User() UserRequestsI
+	Message() MessageRequestsI
 }
 
 func Init(c *config.ApiConfig) ApiI {
 	return &Api{
 		config: c,
 	}
+}
+
+func (api *Api) Message() MessageRequestsI {
+	if api.msgReq != nil {
+		return api.msgReq
+	}
+
+	api.msgReq = &MessageRequests{
+		url: api.config.Url,
+	}
+	return api.msgReq
 }
 
 func (api *Api) User() UserRequestsI {

@@ -13,6 +13,9 @@ type UserRequests struct {
 	url string
 }
 
+/*
+	Сботка методов для работы с пользователскими данными и аккаунтом
+*/
 type UserRequestsI interface {
 	Registration(ctx context.Context) (*fasthttp.Response, error)
 }

@@ -9,8 +9,10 @@ import (
 )
 
 type UserReqStructCtx int8
+type MessageConnectorCtx string
 
 const UserReqStructCtxKey UserReqStructCtx = iota
+const MessageConnectorCtxKey MessageConnectorCtx = "connector"
 
 // Сигнатура функции взаимодействующая со службой
 type Effector func(context.Context) (*fasthttp.Response, error)
@@ -22,9 +24,9 @@ type Effector func(context.Context) (*fasthttp.Response, error)
 func Retry(effector Effector, retries int, delay time.Duration) Effector {
 	return func(ctx context.Context) (*fasthttp.Response, error) {
 		for r := 0; ; r++ {
-			response, err := effector(ctx)
+			resp, err := effector(ctx)
 			if err == nil || r >= retries {
-				return response, err
+				return resp, err
 			}
 
 			fmt.Printf("Attempt %d failed; retrying in %v\n", r+1, delay)
