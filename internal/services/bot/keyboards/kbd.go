@@ -1,33 +1,44 @@
 package keyboards
 
 type Keyboards struct {
-	baseKeyboards     *BaseKeyboards
-	exchangeKeyboards *ExchangeKeyboards
+	baseKeyboards     BaseKeyboardsI
+	exchangeKeyboards ExchangeKeyboardsI
+	billKeyboards     BillKeyboardsI
 }
 
 type KeyboardsI interface {
 	Base() BaseKeyboardsI
 	Exchange() ExchangeKeyboardsI
+	Bill() BillKeyboardsI
 }
 
 func InitKeyboards() KeyboardsI {
 	return &Keyboards{}
 }
 
-func (c *Keyboards) Exchange() ExchangeKeyboardsI {
-	if c.exchangeKeyboards != nil {
-		return c.exchangeKeyboards
+func (k *Keyboards) Bill() BillKeyboardsI {
+	if k.billKeyboards != nil {
+		return k.billKeyboards
 	}
 
-	c.exchangeKeyboards = &ExchangeKeyboards{}
-	return c.exchangeKeyboards
+	k.billKeyboards = &BillKeyboards{}
+	return k.billKeyboards
 }
 
-func (c *Keyboards) Base() BaseKeyboardsI {
-	if c.baseKeyboards != nil {
-		return c.baseKeyboards
+func (k *Keyboards) Exchange() ExchangeKeyboardsI {
+	if k.exchangeKeyboards != nil {
+		return k.exchangeKeyboards
 	}
 
-	c.baseKeyboards = &BaseKeyboards{}
-	return c.baseKeyboards
+	k.exchangeKeyboards = &ExchangeKeyboards{}
+	return k.exchangeKeyboards
+}
+
+func (k *Keyboards) Base() BaseKeyboardsI {
+	if k.baseKeyboards != nil {
+		return k.baseKeyboards
+	}
+
+	k.baseKeyboards = &BaseKeyboards{}
+	return k.baseKeyboards
 }

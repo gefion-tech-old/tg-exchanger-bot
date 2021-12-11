@@ -15,9 +15,9 @@ import (
 )
 
 type UserCommands struct {
-	botAPI *tgbotapi.BotAPI
-	sAPI   api.ApiI
-	kbd    keyboards.KeyboardsI
+	bAPI *tgbotapi.BotAPI
+	sAPI api.ApiI
+	kbd  keyboards.KeyboardsI
 }
 
 type UserCommandsI interface {
@@ -66,7 +66,7 @@ func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error 
 	resp, err := r(ctx)
 	if err != nil {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Сервер не отвечает")
-		c.botAPI.Send(msg)
+		c.bAPI.Send(msg)
 		return err
 	}
 	defer fasthttp.ReleaseResponse(resp)
@@ -85,17 +85,17 @@ func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, helloNewUserMsg.MessageText)
 		msg.ParseMode = tgbotapi.ModeMarkdown
 		msg.ReplyMarkup = c.kbd.Base().BaseStartReplyMarkup()
-		c.botAPI.Send(msg)
+		c.bAPI.Send(msg)
 		return nil
 	case http.StatusUnprocessableEntity:
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, helloUserMsg.MessageText)
 		msg.ParseMode = tgbotapi.ModeMarkdown
 		msg.ReplyMarkup = c.kbd.Base().BaseStartReplyMarkup()
-		c.botAPI.Send(msg)
+		c.bAPI.Send(msg)
 		return nil
 	default:
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Какая-то ошибка")
-		c.botAPI.Send(msg)
+		c.bAPI.Send(msg)
 		return nil
 	}
 }

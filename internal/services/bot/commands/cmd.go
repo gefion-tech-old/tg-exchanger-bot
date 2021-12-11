@@ -7,9 +7,9 @@ import (
 )
 
 type Commands struct {
-	botAPI *tgbotapi.BotAPI
-	sAPI   api.ApiI
-	kbd    keyboards.KeyboardsI
+	bAPI *tgbotapi.BotAPI
+	sAPI api.ApiI
+	kbd  keyboards.KeyboardsI
 
 	userCommands *UserCommands
 }
@@ -20,9 +20,9 @@ type CommandsI interface {
 
 func InitCommands(bAPI *tgbotapi.BotAPI, kbd keyboards.KeyboardsI, sAPI api.ApiI) CommandsI {
 	return &Commands{
-		botAPI: bAPI,
-		sAPI:   sAPI,
-		kbd:    kbd,
+		bAPI: bAPI,
+		sAPI: sAPI,
+		kbd:  kbd,
 	}
 }
 
@@ -32,9 +32,9 @@ func (c *Commands) User() UserCommandsI {
 	}
 
 	c.userCommands = &UserCommands{
-		botAPI: c.botAPI,
-		sAPI:   c.sAPI,
-		kbd:    c.kbd,
+		bAPI: c.bAPI,
+		sAPI: c.sAPI,
+		kbd:  c.kbd,
 	}
 
 	return c.userCommands

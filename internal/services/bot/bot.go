@@ -74,24 +74,29 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			continue
 		}
 
-		if update.Message != nil {
+		if update.Message != nil && update.Message.IsCommand() {
 			switch update.Message.Text {
-			// Обработка входящих сообщений-команд
 			case static.BOT__CMD__START:
 				go bot.error(update, bot.cmd.User().Start(ctx, update))
-
-			// Обработка входящих сообщений-кнопок
-			case static.BOT__BTN__BASE__NEW_EXCHANGE:
-				go bot.error(update, bot.m.Exchange().NewExchange(ctx, update))
+				continue
 			default:
 				continue
 			}
-			continue
+		}
+
+		if update.Message != nil {
+			switch update.Message.Text {
+			case static.BOT__BTN__BASE__NEW_EXCHANGE:
+				go bot.error(update, bot.m.Exchange().NewExchange(ctx, update))
+				continue
+			case static.BOT__BTN__BASE__MY_BILLS:
+				go bot.error(update, bot.m.Bill().MyBills(ctx, update))
+			default:
+				continue
+			}
 		}
 
 		if update.CallbackQuery != nil {
-			fmt.Println(update.CallbackQuery.Data)
-
 			// Декодирую полезную нагрузку
 			p := map[string]interface{}{}
 			bot.error(update, json.Unmarshal([]byte(update.CallbackQuery.Data), &p))
@@ -105,6 +110,9 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 				continue
 			case static.BOT__CQ__EX__REQ_AMOUNT:
 				go bot.error(bot.rewriter(update), bot.m.Exchange().ReqAmount(ctx, update, p))
+				continue
+			default:
+				continue
 
 			}
 		}
