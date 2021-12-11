@@ -7,38 +7,36 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/valyala/fasthttp"
 )
 
-func GetMessage(ctx context.Context, update tgbotapi.Update, sAPI api.ApiI, connector string, params ...interface{}) tgbotapi.MessageConfig {
+func GetMessage(ctx context.Context, update tgbotapi.Update, sAPI api.ApiI, connector string, params ...interface{}) (*models.Message, error) {
 	ctx = context.WithValue(ctx, api.MessageConnectorCtxKey, connector)
 	r := api.Retry(sAPI.Message().Get, 3, time.Second)
 
 	resp, err := r(ctx)
 	if err != nil {
-		return tgbotapi.NewMessage(update.Message.Chat.ID, "Сервер не отвечает")
+		return nil, err
 	}
 	defer fasthttp.ReleaseResponse(resp)
 
-	var body map[string]interface{}
-	if err := json.Unmarshal(resp.Body(), &body); err != nil {
-		return tgbotapi.NewMessage(update.Message.Chat.ID, "Произошла ошибка декодирования ответа...")
+	msg := models.Message{}
+	if err := json.Unmarshal(resp.Body(), &msg); err != nil {
+		return nil, err
 	}
 
 	switch resp.StatusCode() {
 	case http.StatusOK:
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(body["message_text"].(string), params))
-		msg.ParseMode = tgbotapi.ModeMarkdown
-		return msg
+		msg.MessageText = fmt.Sprintf(msg.MessageText, params)
+		return &msg, nil
 	case http.StatusNotFound:
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Сообщение не найдено...")
-		msg.ParseMode = tgbotapi.ModeMarkdown
-		return msg
+		msg.MessageText = "Сообщение не найдено..."
+		return &msg, nil
 	default:
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Произошла какая-то ошибка, попробуйте повторить попытку позже.")
-		msg.ParseMode = tgbotapi.ModeMarkdown
-		return msg
+		msg.MessageText = "Произошла ошибка при получении этого сообщения, попробуйте повторить попытку позже."
+		return &msg, nil
 	}
 }

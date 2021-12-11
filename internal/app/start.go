@@ -39,7 +39,7 @@ func (a *App) Start(ctx context.Context) error {
 	sAPI := api.Init(&a.config.API)
 
 	// Инициализирую модуль бота
-	bot := bot.Init(botAPI, sAPI)
+	bot := bot.Init(botAPI, sAPI, &a.config.Bot)
 
 	// Инициализирую всех NSQ потребителей
 	bConsumers, teardown, err := nsqstore.Init(&a.config.NSQ)

@@ -8,8 +8,9 @@ type Config struct {
 }
 
 type BotConfig struct {
-	Token string `toml:"token"`
-	Debug bool   `toml:"debug"`
+	Token      string   `toml:"token"`
+	Developers []string `toml:"developers"`
+	Debug      bool     `toml:"debug"`
 }
 
 type ApiConfig struct {
