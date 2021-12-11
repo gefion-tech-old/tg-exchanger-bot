@@ -5,14 +5,17 @@ import (
 )
 
 type Api struct {
-	config  *config.ApiConfig
-	userReq *UserRequests
-	msgReq  *MessageRequests
+	config *config.ApiConfig
+
+	userReq UserRequestsI
+	msgReq  MessageRequestsI
+	billReq BillRequestsI
 }
 
 type ApiI interface {
 	User() UserRequestsI
 	Message() MessageRequestsI
+	Bill() BillRequestsI
 }
 
 func Init(c *config.ApiConfig) ApiI {
@@ -21,14 +24,21 @@ func Init(c *config.ApiConfig) ApiI {
 	}
 }
 
+func (api *Api) Bill() BillRequestsI {
+	if api.billReq != nil {
+		return api.billReq
+	}
+
+	api.billReq = InitBillRequests(api.config.Url)
+	return api.billReq
+}
+
 func (api *Api) Message() MessageRequestsI {
 	if api.msgReq != nil {
 		return api.msgReq
 	}
 
-	api.msgReq = &MessageRequests{
-		url: api.config.Url,
-	}
+	api.msgReq = InitMessageRequests(api.config.Url)
 	return api.msgReq
 }
 
@@ -37,8 +47,6 @@ func (api *Api) User() UserRequestsI {
 		return api.userReq
 	}
 
-	api.userReq = &UserRequests{
-		url: api.config.Url,
-	}
+	api.userReq = InitUserRequests(api.config.Url)
 	return api.userReq
 }

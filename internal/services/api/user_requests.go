@@ -20,6 +20,12 @@ type UserRequestsI interface {
 	Registration(ctx context.Context) (*fasthttp.Response, error)
 }
 
+func InitUserRequests(u string) UserRequestsI {
+	return &UserRequests{
+		url: u,
+	}
+}
+
 /*
 	Регистрация пользователя
 */

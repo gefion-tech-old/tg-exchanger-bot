@@ -15,6 +15,12 @@ type MessageRequestsI interface {
 	Get(ctx context.Context) (*fasthttp.Response, error)
 }
 
+func InitMessageRequests(u string) MessageRequestsI {
+	return &MessageRequests{
+		url: u,
+	}
+}
+
 func (r *MessageRequests) Get(ctx context.Context) (*fasthttp.Response, error) {
 	connector := ctx.Value(MessageConnectorCtxKey).(string)
 

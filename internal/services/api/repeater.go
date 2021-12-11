@@ -17,10 +17,8 @@ const MessageConnectorCtxKey MessageConnectorCtx = "connector"
 // Сигнатура функции взаимодействующая со службой
 type Effector func(context.Context) (*fasthttp.Response, error)
 
-/*
-	Учитывает возможный временный характер ошибки  и
-	осуществляет повторные попытки выполнить неучаную операцию.
-*/
+//	Учитывает возможный временный характер ошибки  и
+//	осуществляет повторные попытки выполнить неучаную операцию.
 func Retry(effector Effector, retries int, delay time.Duration) Effector {
 	return func(ctx context.Context) (*fasthttp.Response, error) {
 		for r := 0; ; r++ {
