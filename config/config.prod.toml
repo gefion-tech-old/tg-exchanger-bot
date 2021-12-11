@@ -1,5 +1,6 @@
 [bot]
 token = "2126215860:AAFG2mvnRYojY17lJPsqYwz2yhyszoJOBfY"
+developers = ["I0HuKc"]
 debug = false
 
 [api]
