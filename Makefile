@@ -1,6 +1,11 @@
 SOURCES=./cmd/main
 SERVICE=bot
 
+.PHONY: init
+
+init:
+	mkdir tmp
+
 .PHONY: run
 
 run:
