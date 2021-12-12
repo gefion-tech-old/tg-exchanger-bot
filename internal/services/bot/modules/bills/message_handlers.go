@@ -12,13 +12,6 @@ import (
 )
 
 func (m *ModBills) MyBills(ctx context.Context, update tgbotapi.Update) error {
-	// Получение списка пользовательских счетов
-	// Записываю в контекст UserReq
-	ctx = context.WithValue(ctx, api.UserReqStructCtxKey, &models.UserReq{
-		ChatID:   update.Message.From.ID,
-		Username: update.Message.From.UserName,
-	})
-
 	// Вызываю через повторитель метод получения счетов пользователя
 	r := api.Retry(m.sAPI.Bill().GetAll, 3, time.Second)
 	resp, err := r(ctx, map[string]interface{}{
