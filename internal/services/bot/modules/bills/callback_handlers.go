@@ -50,6 +50,7 @@ func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Updat
 			"meta_data": map[string]interface{}{
 				"code":      action.MetaData["Code"],
 				"user_card": action.MetaData["Card"],
+				"img_path":  img,
 			},
 			"user": map[string]interface{}{
 				"chat_id":  action.User.ChatID,
