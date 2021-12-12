@@ -5,12 +5,15 @@ import (
 )
 
 type Api struct {
-	config *config.ApiConfig
+	config  *config.ApiConfig
+	bConfig *config.BotConfig
 
 	userReq         UserRequestsI
 	msgReq          MessageRequestsI
 	billReq         BillRequestsI
 	notificationReq NotificationRequestsI
+
+	tgReq TelegramRequestsI
 }
 
 type ApiI interface {
@@ -18,12 +21,23 @@ type ApiI interface {
 	Message() MessageRequestsI
 	Bill() BillRequestsI
 	Notification() NotificationRequestsI
+	Telegram() TelegramRequestsI
 }
 
-func Init(c *config.ApiConfig) ApiI {
+func Init(c *config.ApiConfig, bC *config.BotConfig) ApiI {
 	return &Api{
-		config: c,
+		config:  c,
+		bConfig: bC,
 	}
+}
+
+func (api *Api) Telegram() TelegramRequestsI {
+	if api.tgReq != nil {
+		return api.tgReq
+	}
+
+	api.tgReq = InitTelegramRequests("https://api.telegram.org/", api.bConfig.Token)
+	return api.tgReq
 }
 
 func (api *Api) Notification() NotificationRequestsI {

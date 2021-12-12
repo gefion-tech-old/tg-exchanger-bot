@@ -39,3 +39,9 @@ const (
 const (
 	BOT__A__BL__ADD_NEW_BILL = 854
 )
+
+// Набор типов сообщений из NSQ
+const (
+	BOT__NSQ__T__VERIFICATION_CODE = "verification_code"
+	BOT__NSQ__T__CONFIRMATION_REQ  = "confirmation_req"
+)

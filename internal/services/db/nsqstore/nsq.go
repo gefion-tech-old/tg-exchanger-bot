@@ -12,7 +12,7 @@ type BotConsumers struct {
 }
 
 func Init(cnf *config.NsqConfig) (*BotConsumers, func(...*nsq.Consumer), error) {
-	vConsumer, err := configure(cnf, "verification-code", "telegram")
+	vConsumer, err := configure(cnf, "messages", "telegram")
 	if err != nil {
 		return nil, nil, err
 	}

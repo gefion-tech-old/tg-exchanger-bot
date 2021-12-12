@@ -1,9 +1,13 @@
 package bills
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"time"
 
@@ -15,10 +19,30 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/valyala/fasthttp"
+
+	_ "image/jpeg"
 )
 
 func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
 	if update.Message.Photo != nil {
+		if len(*update.Message.Photo) != 3 {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось обраотать изображение :(")
+			m.bAPI.Send(msg)
+			return nil
+		}
+
+		// Скачиваю изображение
+		img, err := m.download(ctx, update)
+		if err != nil {
+			return err
+		}
+
+		if img == "" {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось скачать изображение :(")
+			m.bAPI.Send(msg)
+			return nil
+		}
+
 		// Вызываю через повторитель метод отправки уведомления на сервер
 		r := api.Retry(m.sAPI.Notification().Create, 3, time.Second)
 		resp, err := r(ctx, map[string]interface{}{
@@ -51,6 +75,8 @@ func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Updat
 			m.bAPI.Send(msg)
 			return nil
 		}
+
+		return nil
 	}
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Хм, это не похоже на фотографию...")
@@ -132,4 +158,65 @@ func (m *ModBills) AddNewBillStepOne(ctx context.Context, update tgbotapi.Update
 	msg.ReplyMarkup = m.kbd.Base().CancelAction()
 	m.bAPI.Send(msg)
 	return nil
+}
+
+// Вспомогательный метод
+// Скачивает изображение отправленное пользователем
+// С удаленного сервера telegram
+func (m *ModBills) download(ctx context.Context, update tgbotapi.Update) (string, error) {
+	i := 1
+	for _, f := range *update.Message.Photo {
+		if i == 3 {
+			// Делаю запрос на API telegram для получения пути к файлу
+			r := api.Retry(m.sAPI.Telegram().GetFileDate, 3, time.Second)
+			resp, err := r(ctx, map[string]interface{}{"file_id": f.FileID})
+			if err != nil {
+				return "", errors.ErrBotServerNoAnswer
+			}
+			defer fasthttp.ReleaseResponse(resp)
+
+			switch resp.StatusCode() {
+			case http.StatusOK:
+				var body map[string]interface{}
+				if err := json.Unmarshal(resp.Body(), &body); err != nil {
+					return "", err
+				}
+
+				res := body["result"].(map[string]interface{})
+
+				// Проверяю не является ли файл слишком большим
+				if res["file_size"].(float64)/1000000 > 20 {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Похоже вы отправили очень тяжелый файл, я не могу такой обработать.")
+					m.bAPI.Send(msg)
+					return "", nil
+				}
+
+				// Делаю запрос на API telegram для загрузки изображения
+				rD := api.Retry(m.sAPI.Telegram().DownloadFile, 3, time.Second)
+				respD, err := rD(ctx, map[string]interface{}{"file_path": res["file_path"]})
+				if err != nil {
+					return "", errors.ErrBotServerNoAnswer
+				}
+				defer fasthttp.ReleaseResponse(respD)
+
+				// Сохраняю файл
+				path := fmt.Sprintf("tmp/%s_%s.png", update.Message.Chat.UserName, time.Now().UTC().Format("2006-01-02T15:04:05.00000000"))
+				file, err := os.Create(path)
+				if err != nil {
+					return "", err
+				}
+				defer file.Close()
+
+				if _, err = io.Copy(file, bytes.NewReader(respD.Body())); err != nil {
+					return "", err
+				}
+
+				return path, nil
+			}
+		}
+		i++
+	}
+
+	return "", nil
+
 }

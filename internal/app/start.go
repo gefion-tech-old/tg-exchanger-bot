@@ -51,7 +51,7 @@ func (a *App) Start(ctx context.Context) error {
 	botAPI.Debug = a.config.Bot.Debug
 
 	// Инициализация модуля работы с API сервера
-	sAPI := api.Init(&a.config.API)
+	sAPI := api.Init(&a.config.API, &a.config.Bot)
 
 	// Инициализирую модуль бота
 	bot := bot.Init(botAPI, sAPI, aRedis, &a.config.Bot)
