@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/valyala/fasthttp"
 )
 
@@ -17,7 +16,7 @@ type UserRequests struct {
 	Сботка методов для работы с пользователскими данными и аккаунтом
 */
 type UserRequestsI interface {
-	Registration(ctx context.Context) (*fasthttp.Response, error)
+	Registration(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
 func InitUserRequests(u string) UserRequestsI {
@@ -29,13 +28,8 @@ func InitUserRequests(u string) UserRequestsI {
 /*
 	Регистрация пользователя
 */
-func (r *UserRequests) Registration(ctx context.Context) (*fasthttp.Response, error) {
-	ctxUserReq := ctx.Value(UserReqStructCtxKey).(*models.UserReq)
-
-	b, err := json.Marshal(map[string]interface{}{
-		"chat_id":  ctxUserReq.ChatID,
-		"username": ctxUserReq.Username,
-	})
+func (r *UserRequests) Registration(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}

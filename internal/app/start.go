@@ -6,7 +6,9 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/nsqstore"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/redisstore"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"golang.org/x/sync/errgroup"
 )
@@ -28,6 +30,19 @@ func Init(c *config.Config) AppI {
 func (a *App) Start(ctx context.Context) error {
 	errs, ctx := errgroup.WithContext(ctx)
 
+	// Инициализация redis хранилищ
+
+	uActionsClient, err := db.InitRedis(&a.config.Redis, 10)
+	if err != nil {
+		return err
+	}
+
+	uActions := redisstore.InitUserActions(uActionsClient)
+	defer uActions.Close()
+
+	// Инициализация общей сборки всех redis хранилищ используемых в этом приложении
+	aRedis := redisstore.InitRedisStore(uActions)
+
 	botAPI, err := tgbotapi.NewBotAPI(a.config.Bot.Token)
 	if err != nil {
 		return err
@@ -39,7 +54,7 @@ func (a *App) Start(ctx context.Context) error {
 	sAPI := api.Init(&a.config.API)
 
 	// Инициализирую модуль бота
-	bot := bot.Init(botAPI, sAPI, &a.config.Bot)
+	bot := bot.Init(botAPI, sAPI, aRedis, &a.config.Bot)
 
 	// Инициализирую всех NSQ потребителей
 	bConsumers, teardown, err := nsqstore.Init(&a.config.NSQ)

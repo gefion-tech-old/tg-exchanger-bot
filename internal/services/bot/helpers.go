@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
+	"github.com/go-redis/redis/v7"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/nsqio/go-nsq"
 )
@@ -20,6 +22,36 @@ func (bot *Bot) HandleMessage(m *nsq.Message) error {
 	msg := tgbotapi.NewMessage(msgEvent.To.ChatID, msgEvent.Message.Text)
 	bot.botAPI.Send(msg)
 	return nil
+}
+
+// Игнорировать все команды и кнопки если есть активное действие
+// Исключением является команда /skip которая позволяет отменить
+// любое начатое действие
+func (bot *Bot) action(update tgbotapi.Update) map[string]interface{} {
+	data, err := bot.redis.UserActions().Fetch(int64(update.Message.Chat.ID))
+	switch err {
+	// Значит есть активное действие
+	case nil:
+		ignoreList := []string{
+			static.BOT__CMD__SKIP,
+			static.BOT__BTN__OP__CANCEL,
+		}
+
+		for i := 0; i < len(ignoreList); i++ {
+			if update.Message.Text == ignoreList[i] {
+				return nil
+			}
+		}
+		return data
+
+	// Активных действий нет
+	case redis.Nil:
+		return nil
+
+	default:
+		bot.error(update, err)
+		return nil
+	}
 }
 
 // Метод хелпер для обработки ошибок из нижестоящих хендлеров

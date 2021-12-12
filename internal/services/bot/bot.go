@@ -12,6 +12,7 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/nsqstore"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/redisstore"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/nsqio/go-nsq"
 )
@@ -19,6 +20,7 @@ import (
 type Bot struct {
 	botAPI *tgbotapi.BotAPI
 	cnf    *config.BotConfig
+	redis  redisstore.RedisStoreI
 	m      modules.BotModulesI
 	cmd    commands.CommandsI
 	kbd    keyboards.KeyboardsI
@@ -33,14 +35,15 @@ type BotI interface {
 	ConnectNsqConsumers(bConsumers *nsqstore.BotConsumers)
 }
 
-func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, cnf *config.BotConfig) BotI {
+func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, redis redisstore.RedisStoreI, cnf *config.BotConfig) BotI {
 	kb := keyboards.InitKeyboards()
-	mod := modules.InitBotModules(bAPI, kb, sAPI)
+	mod := modules.InitBotModules(bAPI, kb, redis, sAPI)
 	cmd := commands.InitCommands(bAPI, kb, sAPI)
 
 	return &Bot{
 		botAPI: bAPI,
 		cnf:    cnf,
+		redis:  redis,
 		cmd:    cmd,
 		kbd:    kb,
 		m:      mod,
@@ -74,10 +77,19 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			continue
 		}
 
+		// Проверка на наличие незавершенных действий
+		if payload := bot.action(bot.rewriter(update)); payload != nil {
+			go bot.error(bot.rewriter(update), bot.ActionsHandler(ctx, update, payload))
+			continue
+		}
+
 		if update.Message != nil && update.Message.IsCommand() {
 			switch update.Message.Text {
 			case static.BOT__CMD__START:
 				go bot.error(update, bot.cmd.User().Start(ctx, update))
+				continue
+			case static.BOT__CMD__SKIP:
+				go bot.error(update, bot.CancelAnyAction(update))
 				continue
 			default:
 				continue
@@ -91,17 +103,27 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 				continue
 			case static.BOT__BTN__BASE__MY_BILLS:
 				go bot.error(update, bot.m.Bill().MyBills(ctx, update))
+				continue
+			case static.BOT__BTN__OP__CANCEL:
+				go bot.error(update, bot.CancelAnyAction(update))
+				continue
 			default:
 				continue
 			}
 		}
 
 		if update.CallbackQuery != nil {
+			fmt.Println(update.CallbackQuery.Data)
 			// Декодирую полезную нагрузку
 			p := map[string]interface{}{}
 			bot.error(update, json.Unmarshal([]byte(update.CallbackQuery.Data), &p))
 
 			switch p["CbQ"] {
+			// Обработчики событий связанных с пользовательскими счетами
+			case static.BOT__CQ_BL__ADD_BILL_S_1:
+				bot.error(bot.rewriter(update), bot.m.Bill().AddNewBillStepOne(ctx, update))
+
+			// Обработчики событий связанных с операцией нового обмена
 			case static.BOT__CQ__EX__COINS_TO_EXCHAGE:
 				go bot.error(bot.rewriter(update), bot.m.Exchange().NewExchange(ctx, bot.rewriter(update)))
 				continue

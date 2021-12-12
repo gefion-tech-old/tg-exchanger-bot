@@ -17,7 +17,7 @@ func GetMessage(ctx context.Context, update tgbotapi.Update, sAPI api.ApiI, conn
 	ctx = context.WithValue(ctx, api.MessageConnectorCtxKey, connector)
 	r := api.Retry(sAPI.Message().Get, 3, time.Second)
 
-	resp, err := r(ctx)
+	resp, err := r(ctx, map[string]interface{}{"connector": connector})
 	if err != nil {
 		return nil, err
 	}

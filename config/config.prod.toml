@@ -10,5 +10,6 @@ url = "http://80.78.253.68:4000"
 host = "80.78.253.68"
 port = 4161
 
-[general]
-cores = 2
+[redis]
+host = "localhost"
+port = 6379

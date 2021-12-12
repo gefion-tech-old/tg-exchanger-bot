@@ -21,7 +21,9 @@ func (m *ModBills) MyBills(ctx context.Context, update tgbotapi.Update) error {
 
 	// Вызываю через повторитель метод получения счетов пользователя
 	r := api.Retry(m.sAPI.Bill().GetAll, 3, time.Second)
-	resp, err := r(ctx)
+	resp, err := r(ctx, map[string]interface{}{
+		"chat_id": update.Message.From.ID,
+	})
 	if err != nil {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Сервер не отвечает")
 		m.bAPI.Send(msg)

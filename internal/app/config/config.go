@@ -1,10 +1,10 @@
 package config
 
 type Config struct {
-	Bot     BotConfig     `toml:"bot"`
-	API     ApiConfig     `toml:"api"`
-	NSQ     NsqConfig     `toml:"nsq"`
-	General GeneralConfig `toml:"general"`
+	Bot   BotConfig   `toml:"bot"`
+	API   ApiConfig   `toml:"api"`
+	NSQ   NsqConfig   `toml:"nsq"`
+	Redis RedisConfig `toml:"redis"`
 }
 
 type BotConfig struct {
@@ -22,8 +22,9 @@ type NsqConfig struct {
 	Port int    `toml:"port"`
 }
 
-type GeneralConfig struct {
-	Cores int `toml:"cores"`
+type RedisConfig struct {
+	Host string `toml:"host"`
+	Port int64  `toml:"port"`
 }
 
 func Init() *Config {

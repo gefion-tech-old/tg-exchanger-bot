@@ -3,6 +3,7 @@ package static
 // Набор поддерживаемых ботом команд
 const (
 	BOT__CMD__START = "/start"
+	BOT__CMD__SKIP  = "/skip"
 )
 
 // Набор ресурсов для кнопок
@@ -13,9 +14,12 @@ const (
 	BOT__BTN__BASE__SUPPORT      = "🔔 Поддержка"
 	BOT__BTN__BASE__ABOUT_BOT    = "ℹ️ О боте"
 	BOT__BTN__BASE__OPERATORS    = "🤖 Операторы"
+
+	BOT__BTN__OP__CANCEL = "❌ Отменить"
+	BOT__BTN__OP__SAVE   = "✅ Завершить"
 )
 
-// Наборы для CallbackQuery
+/* Наборы для CallbackQuery */
 
 // Нобор CallbackQuery для модуля Exchanges
 const (
@@ -26,5 +30,12 @@ const (
 
 // Нобор CallbackQuery для модуля Bills
 const (
-	BOT__CQ_BL__ADD_BILL = "add_bl_bl"
+	BOT__CQ_BL__ADD_BILL_S_1         = "add_bl_s_1"
+	BOT__CQ_BL__ADD_BILL_VALID_S_2   = "add_bl_val_s_2"
+	BOT__CQ_BL__ADD_BILL_N_VALID_S_2 = "add_bl_nval_s_2"
+)
+
+// Набор возможных типов пользовательских действий
+const (
+	BOT__A__BL__ADD_NEW_BILL = 854
 )

@@ -7,21 +7,32 @@ import (
 type Api struct {
 	config *config.ApiConfig
 
-	userReq UserRequestsI
-	msgReq  MessageRequestsI
-	billReq BillRequestsI
+	userReq         UserRequestsI
+	msgReq          MessageRequestsI
+	billReq         BillRequestsI
+	notificationReq NotificationRequestsI
 }
 
 type ApiI interface {
 	User() UserRequestsI
 	Message() MessageRequestsI
 	Bill() BillRequestsI
+	Notification() NotificationRequestsI
 }
 
 func Init(c *config.ApiConfig) ApiI {
 	return &Api{
 		config: c,
 	}
+}
+
+func (api *Api) Notification() NotificationRequestsI {
+	if api.notificationReq != nil {
+		return api.notificationReq
+	}
+
+	api.notificationReq = InitNotificationRequests(api.config.Url)
+	return api.notificationReq
 }
 
 func (api *Api) Bill() BillRequestsI {

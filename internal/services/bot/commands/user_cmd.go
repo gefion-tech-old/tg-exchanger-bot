@@ -55,15 +55,12 @@ func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error 
 		return nil
 	})
 
-	// Записываю в контекст UserReq
-	ctx = context.WithValue(ctx, api.UserReqStructCtxKey, &models.UserReq{
-		ChatID:   update.Message.From.ID,
-		Username: update.Message.From.UserName,
-	})
-
 	// Вызываю через повторитель метод регистрации пользователя
 	r := api.Retry(c.sAPI.User().Registration, 3, time.Second)
-	resp, err := r(ctx)
+	resp, err := r(ctx, map[string]interface{}{
+		"chat_id":  update.Message.From.ID,
+		"username": update.Message.From.UserName,
+	})
 	if err != nil {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Сервер не отвечает")
 		c.bAPI.Send(msg)

@@ -10,7 +10,17 @@ var _ BaseKeyboardsI = (*BaseKeyboards)(nil)
 type BaseKeyboards struct{}
 
 type BaseKeyboardsI interface {
+	CancelAction() tgbotapi.ReplyKeyboardMarkup
 	BaseStartReplyMarkup() tgbotapi.ReplyKeyboardMarkup
+}
+
+// Отменить любое начатое действие
+func (kb *BaseKeyboards) CancelAction() tgbotapi.ReplyKeyboardMarkup {
+	return tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(static.BOT__BTN__OP__CANCEL),
+		),
+	)
 }
 
 func (kb *BaseKeyboards) BaseStartReplyMarkup() tgbotapi.ReplyKeyboardMarkup {

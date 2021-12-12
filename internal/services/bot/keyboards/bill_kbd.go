@@ -13,7 +13,18 @@ var _ BillKeyboardsI = (*BillKeyboards)(nil)
 type BillKeyboards struct{}
 
 type BillKeyboardsI interface {
+	// InlineKeyboards
 	MyBillsList(arr []models.Bill) tgbotapi.InlineKeyboardMarkup
+	CardСorrectnessConfirmation() tgbotapi.InlineKeyboardMarkup
+}
+
+func (kb *BillKeyboards) CardСorrectnessConfirmation() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Нет", fmt.Sprintf(`{"CbQ": "%s"}`, static.BOT__CQ_BL__ADD_BILL_N_VALID_S_2)),
+			tgbotapi.NewInlineKeyboardButtonData("Да", fmt.Sprintf(`{"CbQ": "%s"}`, static.BOT__CQ_BL__ADD_BILL_VALID_S_2)),
+		),
+	)
 }
 
 func (kb *BillKeyboards) MyBillsList(arr []models.Bill) tgbotapi.InlineKeyboardMarkup {
@@ -29,7 +40,7 @@ func (kb *BillKeyboards) MyBillsList(arr []models.Bill) tgbotapi.InlineKeyboardM
 
 	k.InlineKeyboard = append(k.InlineKeyboard,
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("❇️ Добавить ❇️", fmt.Sprintf(`{"CbQ": "%s"}`, static.BOT__CQ_BL__ADD_BILL)),
+			tgbotapi.NewInlineKeyboardButtonData("Добавить", fmt.Sprintf(`{"CbQ": "%s"}`, static.BOT__CQ_BL__ADD_BILL_S_1)),
 		))
 
 	return k

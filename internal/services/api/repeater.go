@@ -15,14 +15,14 @@ const UserReqStructCtxKey UserReqStructCtx = iota
 const MessageConnectorCtxKey MessageConnectorCtx = "connector"
 
 // Сигнатура функции взаимодействующая со службой
-type Effector func(context.Context) (*fasthttp.Response, error)
+type Effector func(context.Context, map[string]interface{}) (*fasthttp.Response, error)
 
 //	Учитывает возможный временный характер ошибки  и
 //	осуществляет повторные попытки выполнить неучаную операцию.
 func Retry(effector Effector, retries int, delay time.Duration) Effector {
-	return func(ctx context.Context) (*fasthttp.Response, error) {
+	return func(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
 		for r := 0; ; r++ {
-			resp, err := effector(ctx)
+			resp, err := effector(ctx, body)
 			if err == nil || r >= retries {
 				return resp, err
 			}
