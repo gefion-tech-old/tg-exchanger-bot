@@ -25,8 +25,8 @@ import (
 
 func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
 	if update.Message.Photo != nil {
-		if len(*update.Message.Photo) != 3 {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось обраотать изображение :(")
+		if len(*update.Message.Photo) < 3 {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось обраотать изображение :(\nИзображение низкого качества.")
 			m.bAPI.Send(msg)
 			return nil
 		}
@@ -167,7 +167,7 @@ func (m *ModBills) AddNewBillStepOne(ctx context.Context, update tgbotapi.Update
 func (m *ModBills) download(ctx context.Context, update tgbotapi.Update) (string, error) {
 	i := 1
 	for _, f := range *update.Message.Photo {
-		if i == 3 {
+		if i == len(*update.Message.Photo) {
 			// Делаю запрос на API telegram для получения пути к файлу
 			r := api.Retry(m.sAPI.Telegram().GetFileDate, 3, time.Second)
 			resp, err := r(ctx, map[string]interface{}{"file_id": f.FileID})
@@ -201,7 +201,7 @@ func (m *ModBills) download(ctx context.Context, update tgbotapi.Update) (string
 				defer fasthttp.ReleaseResponse(respD)
 
 				// Сохраняю файл
-				path := fmt.Sprintf("tmp/%s_%s.png", update.Message.Chat.UserName, time.Now().UTC().Format("2006-01-02T15:04:05.00000000"))
+				path := fmt.Sprintf("tmp/%s_%s.jpeg", update.Message.Chat.UserName, time.Now().UTC().Format("2006-01-02T15:04:05.00000000"))
 				file, err := os.Create(path)
 				if err != nil {
 					return "", err
