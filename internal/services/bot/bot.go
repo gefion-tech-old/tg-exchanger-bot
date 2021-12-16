@@ -19,6 +19,7 @@ import (
 
 type Bot struct {
 	botAPI *tgbotapi.BotAPI
+	sAPI   api.ApiI
 	cnf    *config.BotConfig
 	redis  redisstore.RedisStoreI
 	m      modules.BotModulesI
@@ -42,6 +43,7 @@ func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, redis redisstore.RedisStoreI, cn
 
 	return &Bot{
 		botAPI: bAPI,
+		sAPI:   sAPI,
 		cnf:    cnf,
 		redis:  redis,
 		cmd:    cmd,
@@ -78,7 +80,8 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 		}
 
 		// Проверка на наличие незавершенных действий
-		if payload := bot.action(bot.rewriter(update)); payload != nil {
+		payload, ignore := bot.action(bot.rewriter(update))
+		if !ignore && payload != nil {
 			go bot.error(bot.rewriter(update), bot.ActionsHandler(ctx, update, payload))
 			continue
 		}
@@ -88,9 +91,11 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			case static.BOT__CMD__START:
 				go bot.error(update, bot.cmd.User().Start(ctx, update))
 				continue
+
 			case static.BOT__CMD__SKIP:
-				go bot.error(update, bot.CancelAnyAction(update))
+				go bot.error(update, bot.CancelAnyAction(ctx, update, payload))
 				continue
+
 			default:
 				continue
 			}
@@ -101,12 +106,15 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			case static.BOT__BTN__BASE__NEW_EXCHANGE:
 				go bot.error(update, bot.m.Exchange().NewExchange(ctx, update))
 				continue
+
 			case static.BOT__BTN__BASE__MY_BILLS:
 				go bot.error(update, bot.m.Bill().MyBills(ctx, update))
 				continue
+
 			case static.BOT__BTN__OP__CANCEL:
-				go bot.error(update, bot.CancelAnyAction(update))
+				go bot.error(update, bot.CancelAnyAction(ctx, update, payload))
 				continue
+
 			default:
 				continue
 			}
@@ -116,23 +124,27 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 			fmt.Println(update.CallbackQuery.Data)
 			// Декодирую полезную нагрузку
 			p := map[string]interface{}{}
-			bot.error(update, json.Unmarshal([]byte(update.CallbackQuery.Data), &p))
+			bot.error(bot.rewriter(update), json.Unmarshal([]byte(update.CallbackQuery.Data), &p))
 
 			switch p["CbQ"] {
 			// Обработчики событий связанных с пользовательскими счетами
 			case static.BOT__CQ_BL__ADD_BILL_S_1:
-				bot.error(bot.rewriter(update), bot.m.Bill().AddNewBillStepOne(ctx, update))
+				go bot.error(bot.rewriter(update), bot.m.Bill().AddNewBillStepOne(ctx, update))
+				continue
 
 			// Обработчики событий связанных с операцией нового обмена
 			case static.BOT__CQ__EX__COINS_TO_EXCHAGE:
 				go bot.error(bot.rewriter(update), bot.m.Exchange().NewExchange(ctx, bot.rewriter(update)))
 				continue
+
 			case static.BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE:
 				go bot.error(bot.rewriter(update), bot.m.Exchange().ReceiveAsResultOfExchange(ctx, update, p))
 				continue
+
 			case static.BOT__CQ__EX__REQ_AMOUNT:
 				go bot.error(bot.rewriter(update), bot.m.Exchange().ReqAmount(ctx, update, p))
 				continue
+
 			default:
 				continue
 

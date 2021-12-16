@@ -47,6 +47,6 @@ func (m *BotModules) Exchange() exchanges.ModExchangesI {
 		return m.exchangesMod
 	}
 
-	m.exchangesMod = exchanges.InitModExchanges(m.bAPI, m.sAPI, m.kbd)
+	m.exchangesMod = exchanges.InitModExchanges(m.bAPI, m.sAPI, m.redis, m.kbd)
 	return m.exchangesMod
 }

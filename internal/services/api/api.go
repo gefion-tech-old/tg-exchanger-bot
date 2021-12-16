@@ -12,6 +12,7 @@ type Api struct {
 	msgReq          MessageRequestsI
 	billReq         BillRequestsI
 	notificationReq NotificationRequestsI
+	exchangerReq    ExchangerRequestsI
 
 	tgReq TelegramRequestsI
 }
@@ -22,6 +23,7 @@ type ApiI interface {
 	Bill() BillRequestsI
 	Notification() NotificationRequestsI
 	Telegram() TelegramRequestsI
+	Exchanger() ExchangerRequestsI
 }
 
 func Init(c *config.ApiConfig, bC *config.BotConfig) ApiI {
@@ -29,6 +31,15 @@ func Init(c *config.ApiConfig, bC *config.BotConfig) ApiI {
 		config:  c,
 		bConfig: bC,
 	}
+}
+
+func (api *Api) Exchanger() ExchangerRequestsI {
+	if api.exchangerReq != nil {
+		return api.exchangerReq
+	}
+
+	api.exchangerReq = InitExchangerRequests(api.config.Url)
+	return api.exchangerReq
 }
 
 func (api *Api) Telegram() TelegramRequestsI {

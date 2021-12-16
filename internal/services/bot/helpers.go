@@ -28,7 +28,7 @@ func (bot *Bot) HandleMessage(m *nsq.Message) error {
 // Игнорировать все команды и кнопки если есть активное действие
 // Исключением является команда /skip которая позволяет отменить
 // любое начатое действие
-func (bot *Bot) action(update tgbotapi.Update) map[string]interface{} {
+func (bot *Bot) action(update tgbotapi.Update) (map[string]interface{}, bool) {
 	data, err := bot.redis.UserActions().Fetch(int64(update.Message.Chat.ID))
 	switch err {
 	// Значит есть активное действие
@@ -40,18 +40,18 @@ func (bot *Bot) action(update tgbotapi.Update) map[string]interface{} {
 
 		for i := 0; i < len(ignoreList); i++ {
 			if update.Message.Text == ignoreList[i] {
-				return nil
+				return data, true
 			}
 		}
-		return data
+		return data, false
 
 	// Активных действий нет
 	case redis.Nil:
-		return nil
+		return nil, true
 
 	default:
 		bot.error(update, err)
-		return nil
+		return nil, true
 	}
 }
 

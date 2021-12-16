@@ -3,11 +3,15 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"time"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/app/errors"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/mitchellh/mapstructure"
+	"github.com/valyala/fasthttp"
 )
 
 func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payload map[string]interface{}) error {
@@ -45,14 +49,49 @@ func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payl
 			return nil
 		}
 
+	case static.BOT__A__EX__NEW_EXCHAGE:
+		switch action.Step {
+		case 1:
+			return bot.m.Exchange().CreateLinkForPayment(ctx, update, &action)
+		default:
+			return nil
+		}
+
 	default:
 		return nil
 	}
 }
 
-func (bot *Bot) CancelAnyAction(update tgbotapi.Update) error {
+func (bot *Bot) CancelAnyAction(ctx context.Context, update tgbotapi.Update, payload map[string]interface{}) error {
 	if err := bot.redis.UserActions().Delete(update.Message.Chat.ID); err != nil {
 		return err
+	}
+
+	if payload["ActionType"] != nil {
+		if int(payload["ActionType"].(float64)) == static.BOT__A__EX__NEW_EXCHAGE {
+			action := models.UserAction{}
+			if err := mapstructure.Decode(payload, &action); err != nil {
+				return err
+			}
+
+			// Вызываю через повторитель метод отправки уведомления на сервер
+			r := api.Retry(bot.sAPI.Notification().Create, 3, time.Second)
+			resp, err := r(ctx, map[string]interface{}{
+				"type": action.ActionType,
+				"meta_data": map[string]interface{}{
+					"exchange_from": action.MetaData["From"],
+					"exchange_to":   action.MetaData["To"],
+				},
+				"user": map[string]interface{}{
+					"chat_id":  action.User.ChatID,
+					"username": action.User.Username,
+				},
+			})
+			if err != nil {
+				return errors.ErrBotServerNoAnswer
+			}
+			defer fasthttp.ReleaseResponse(resp)
+		}
 	}
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Действие успешно отменено.")

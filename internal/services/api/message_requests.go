@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/valyala/fasthttp"
 )
@@ -25,7 +24,7 @@ func (r *MessageRequests) Get(ctx context.Context, body map[string]interface{}) 
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethod("GET")
 	req.Header.SetContentType("application/json")
-	req.SetRequestURI(fmt.Sprintf("%s/api/v1/admin/message?connector=%s", r.url, body["connector"]))
+	req.SetRequestURI(r.url + "/api/v1/admin/message/" + body["connector"].(string))
 	res := fasthttp.AcquireResponse()
 	if err := fasthttp.Do(req, res); err != nil {
 		return nil, err

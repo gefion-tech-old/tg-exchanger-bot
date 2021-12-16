@@ -3,20 +3,27 @@ package exchanges
 import (
 	"context"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/redisstore"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 var _ ModExchangesI = (*ModExchanges)(nil)
 
 type ModExchanges struct {
-	bAPI *tgbotapi.BotAPI
-	sAPI api.ApiI
-	kbd  keyboards.KeyboardsI
+	bAPI  *tgbotapi.BotAPI
+	sAPI  api.ApiI
+	redis redisstore.RedisStoreI
+	kbd   keyboards.KeyboardsI
 }
 
 type ModExchangesI interface {
+	/* Action обработчики */
+
+	CreateLinkForPayment(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error
+
 	/* CallbackQuery обработчики */
 
 	// @CallbackQuery BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE
@@ -32,10 +39,11 @@ type ModExchangesI interface {
 	NewExchange(ctx context.Context, update tgbotapi.Update) error
 }
 
-func InitModExchanges(bAPI *tgbotapi.BotAPI, servAPI api.ApiI, k keyboards.KeyboardsI) ModExchangesI {
+func InitModExchanges(bAPI *tgbotapi.BotAPI, servAPI api.ApiI, redis redisstore.RedisStoreI, k keyboards.KeyboardsI) ModExchangesI {
 	return &ModExchanges{
-		bAPI: bAPI,
-		sAPI: servAPI,
-		kbd:  k,
+		bAPI:  bAPI,
+		sAPI:  servAPI,
+		redis: redis,
+		kbd:   k,
 	}
 }

@@ -140,11 +140,14 @@ func (m *ModBills) AddNewBillStepTwo(ctx context.Context, update tgbotapi.Update
 
 // Запрос у пользователя номера карты
 func (m *ModBills) AddNewBillStepOne(ctx context.Context, update tgbotapi.Update) error {
-
+	// Создание в redis пользовательского действия
 	if err := m.redis.UserActions().New(update.CallbackQuery.Message.Chat.ID, &models.UserAction{
 		ActionType: static.BOT__A__BL__ADD_NEW_BILL,
 		Step:       1,
-		User: models.UserReq{
+		User: struct {
+			ChatID   int
+			Username string
+		}{
 			ChatID:   int(update.CallbackQuery.Message.Chat.ID),
 			Username: update.CallbackQuery.Message.Chat.UserName,
 		},
