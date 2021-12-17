@@ -204,7 +204,7 @@ func (m *ModBills) download(ctx context.Context, update tgbotapi.Update) (string
 				defer fasthttp.ReleaseResponse(respD)
 
 				// Сохраняю файл
-				path := fmt.Sprintf("tmp/%s_%s.jpeg", update.Message.Chat.UserName, time.Now().UTC().Format("2006-01-02T15:04:05.00000000"))
+				path := fmt.Sprintf("%s/img/%s_%s.jpeg", m.cnf.Tmp, update.Message.Chat.UserName, time.Now().UTC().Format("2006-01-02T15:04:05.00000000"))
 				file, err := os.Create(path)
 				if err != nil {
 					return "", err

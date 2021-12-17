@@ -11,6 +11,7 @@ type BotConfig struct {
 	Token      string   `toml:"token"`
 	Developers []string `toml:"developers"`
 	Debug      bool     `toml:"debug"`
+	Tmp        string   `toml:"tmp"`
 }
 
 type ApiConfig struct {

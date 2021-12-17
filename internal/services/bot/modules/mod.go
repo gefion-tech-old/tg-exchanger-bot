@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules/base"
@@ -13,6 +14,7 @@ import (
 type BotModules struct {
 	bAPI  *tgbotapi.BotAPI
 	sAPI  api.ApiI
+	cnf   *config.BotConfig
 	redis redisstore.RedisStoreI
 	kbd   keyboards.KeyboardsI
 
@@ -27,12 +29,14 @@ type BotModulesI interface {
 	Bill() bills.ModBillsI
 }
 
-func InitBotModules(bAPI *tgbotapi.BotAPI, kbd keyboards.KeyboardsI, redis redisstore.RedisStoreI, sAPI api.ApiI) BotModulesI {
+func InitBotModules(bAPI *tgbotapi.BotAPI, kbd keyboards.KeyboardsI, redis redisstore.RedisStoreI, sAPI api.ApiI, cnf *config.BotConfig) BotModulesI {
 	return &BotModules{
 		bAPI:  bAPI,
 		sAPI:  sAPI,
 		redis: redis,
 		kbd:   kbd,
+
+		cnf: cnf,
 	}
 }
 
@@ -50,7 +54,7 @@ func (m *BotModules) Bill() bills.ModBillsI {
 		return m.billMod
 	}
 
-	m.billMod = bills.InitModBills(m.bAPI, m.sAPI, m.redis, m.kbd)
+	m.billMod = bills.InitModBills(m.bAPI, m.sAPI, m.redis, m.kbd, m.cnf)
 	return m.billMod
 }
 

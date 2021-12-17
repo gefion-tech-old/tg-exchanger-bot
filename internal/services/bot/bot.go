@@ -38,7 +38,7 @@ type BotI interface {
 
 func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, redis redisstore.RedisStoreI, cnf *config.BotConfig) BotI {
 	kb := keyboards.InitKeyboards()
-	mod := modules.InitBotModules(bAPI, kb, redis, sAPI)
+	mod := modules.InitBotModules(bAPI, kb, redis, sAPI, cnf)
 	cmd := commands.InitCommands(bAPI, kb, sAPI)
 
 	return &Bot{

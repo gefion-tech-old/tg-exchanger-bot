@@ -2,6 +2,7 @@
 token = "2126215860:AAFG2mvnRYojY17lJPsqYwz2yhyszoJOBfY"
 developers = ["I0HuKc"]
 debug = false
+tmp = "http://80.78.253.68/var/www/html/tmp"
 
 [api]
 url = "http://80.78.253.68:4000"
