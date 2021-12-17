@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules/base"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules/bills"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules/exchanges"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/redisstore"
@@ -17,9 +18,11 @@ type BotModules struct {
 
 	exchangesMod exchanges.ModExchangesI
 	billMod      bills.ModBillsI
+	baseMod      base.ModBaseI
 }
 
 type BotModulesI interface {
+	Base() base.ModBaseI
 	Exchange() exchanges.ModExchangesI
 	Bill() bills.ModBillsI
 }
@@ -31,6 +34,15 @@ func InitBotModules(bAPI *tgbotapi.BotAPI, kbd keyboards.KeyboardsI, redis redis
 		redis: redis,
 		kbd:   kbd,
 	}
+}
+
+func (m *BotModules) Base() base.ModBaseI {
+	if m.baseMod != nil {
+		return m.baseMod
+	}
+
+	m.baseMod = base.InitModBase(m.bAPI, m.sAPI, m.redis, m.kbd)
+	return m.baseMod
 }
 
 func (m *BotModules) Bill() bills.ModBillsI {

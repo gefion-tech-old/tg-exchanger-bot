@@ -33,12 +33,15 @@ const (
 	BOT__CQ_BL__ADD_BILL_S_1         = "add_bl_s_1"
 	BOT__CQ_BL__ADD_BILL_VALID_S_2   = "add_bl_val_s_2"
 	BOT__CQ_BL__ADD_BILL_N_VALID_S_2 = "add_bl_nval_s_2"
+
+	BOT__CQ_BL__SELECT_BILL = "slct_bl"
 )
 
 // Набор возможных типов пользовательских действий
 const (
-	BOT__A__BL__ADD_NEW_BILL = 854
-	BOT__A__EX__NEW_EXCHAGE  = 855
+	BOT__A__BL__ADD_NEW_BILL  = 854
+	BOT__A__EX__NEW_EXCHAGE   = 855
+	BOT__A__BASE__REQ_SUPPORT = 900
 )
 
 // Набор типов сообщений из NSQ

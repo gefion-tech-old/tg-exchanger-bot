@@ -33,7 +33,7 @@ func (kb *BillKeyboards) MyBillsList(arr []models.Bill) tgbotapi.InlineKeyboardM
 		k.InlineKeyboard = append(k.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(
 				arr[i].Bill,
-				"",
+				fmt.Sprintf(`{"CbQ": "%s", "ID": %d}`, static.BOT__CQ_BL__SELECT_BILL, arr[i].ID),
 			),
 		))
 	}

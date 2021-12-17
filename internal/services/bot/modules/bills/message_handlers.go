@@ -2,6 +2,7 @@ package bills
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -28,9 +29,9 @@ func (m *ModBills) MyBills(ctx context.Context, update tgbotapi.Update) error {
 	case http.StatusOK:
 		bills := []models.Bill{}
 
-		// if err := json.Unmarshal(resp.Body(), &bills); err != nil {
-		// 	return err
-		// }
+		if err := json.Unmarshal(resp.Body(), &bills); err != nil {
+			return err
+		}
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Список ваших счетов:")
 

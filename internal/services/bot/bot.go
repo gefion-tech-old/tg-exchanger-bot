@@ -115,6 +115,9 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 				go bot.error(update, bot.CancelAnyAction(ctx, update, payload))
 				continue
 
+			case static.BOT__BTN__BASE__SUPPORT:
+				go bot.error(update, bot.m.Base().SupportRequest(ctx, update))
+
 			default:
 				continue
 			}
