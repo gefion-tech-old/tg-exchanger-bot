@@ -37,6 +37,8 @@ func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Updat
 			return err
 		}
 
+		fmt.Println(img)
+
 		if img == "" {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось скачать изображение :(")
 			m.bAPI.Send(msg)
@@ -45,12 +47,15 @@ func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Updat
 
 		// Вызываю через повторитель метод отправки уведомления на сервер
 		r := api.Retry(m.sAPI.Notification().Create, 3, time.Second)
+		fmt.Println(img)
 		resp, err := r(ctx, map[string]interface{}{
 			"type": action.ActionType,
 			"meta_data": map[string]interface{}{
-				"code":      action.MetaData["Code"],
-				"user_card": action.MetaData["Card"],
-				"img_path":  img,
+				"card_verification": map[string]interface{}{
+					"code":      action.MetaData["Code"],
+					"user_card": action.MetaData["Card"],
+					"img_path":  img,
+				},
 			},
 			"user": map[string]interface{}{
 				"chat_id":  action.User.ChatID,
