@@ -2,7 +2,6 @@ package base
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -13,6 +12,21 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// @Button BOT__BTN__BASE__OPERATORS
+func (m *ModBase) Operators(ctx context.Context, update tgbotapi.Update) error {
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Какая-то информация тут.")
+	m.bAPI.Send(msg)
+	return nil
+}
+
+// @Button BOT__BTN__BASE__ABOUT_BOT
+func (m *ModBase) AboutBot(ctx context.Context, update tgbotapi.Update) error {
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Какая-то информация о боте тут.")
+	m.bAPI.Send(msg)
+	return nil
+}
+
+// @Button BOT__BTN__BASE__SUPPORT
 func (m *ModBase) SupportRequest(ctx context.Context, update tgbotapi.Update) error {
 	// Вызываю через повторитель метод отправки уведомления на сервер
 	r := api.Retry(m.sAPI.Notification().Create, 3, time.Second)
@@ -27,8 +41,6 @@ func (m *ModBase) SupportRequest(ctx context.Context, update tgbotapi.Update) er
 		return errors.ErrBotServerNoAnswer
 	}
 	defer fasthttp.ReleaseResponse(resp)
-
-	fmt.Println(resp.StatusCode())
 
 	switch resp.StatusCode() {
 	case http.StatusCreated:

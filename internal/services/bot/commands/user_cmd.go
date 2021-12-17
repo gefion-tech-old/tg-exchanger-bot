@@ -24,6 +24,14 @@ type UserCommandsI interface {
 	Start(ctx context.Context, update tgbotapi.Update) error
 }
 
+func InitUserCommands(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, kbd keyboards.KeyboardsI) UserCommandsI {
+	return &UserCommands{
+		bAPI: bAPI,
+		sAPI: sAPI,
+		kbd:  kbd,
+	}
+}
+
 // @Command /start
 func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error {
 	errs, _ := errgroup.WithContext(ctx)

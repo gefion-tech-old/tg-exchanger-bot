@@ -91,6 +91,8 @@ func (bot *Bot) check(update tgbotapi.Update) bool {
 	return true
 }
 
+// Вспомогательный метод
+// Для перезаписи объекта update
 func (bot *Bot) rewriter(update tgbotapi.Update) tgbotapi.Update {
 	// Если получили Message а CallbackQuery пустой
 	if update.Message != nil {

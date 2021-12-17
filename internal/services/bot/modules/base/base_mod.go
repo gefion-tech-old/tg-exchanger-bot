@@ -19,6 +19,8 @@ type ModBase struct {
 type ModBaseI interface {
 	/* ReplyKeyboardMarkup обработчики*/
 	SupportRequest(ctx context.Context, update tgbotapi.Update) error
+	AboutBot(ctx context.Context, update tgbotapi.Update) error
+	Operators(ctx context.Context, update tgbotapi.Update) error
 }
 
 func InitModBase(bAPI *tgbotapi.BotAPI, servAPI api.ApiI, redis redisstore.RedisStoreI, k keyboards.KeyboardsI) ModBaseI {

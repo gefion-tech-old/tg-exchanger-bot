@@ -11,10 +11,12 @@ type Commands struct {
 	sAPI api.ApiI
 	kbd  keyboards.KeyboardsI
 
-	userCommands *UserCommands
+	userCommands UserCommandsI
+	baseCommands BaseCommandsI
 }
 
 type CommandsI interface {
+	Base() BaseCommandsI
 	User() UserCommandsI
 }
 
@@ -26,16 +28,20 @@ func InitCommands(bAPI *tgbotapi.BotAPI, kbd keyboards.KeyboardsI, sAPI api.ApiI
 	}
 }
 
+func (c *Commands) Base() BaseCommandsI {
+	if c.baseCommands != nil {
+		return c.baseCommands
+	}
+
+	c.baseCommands = InitBaseCommands(c.bAPI, c.sAPI, c.kbd)
+	return c.baseCommands
+}
+
 func (c *Commands) User() UserCommandsI {
 	if c.userCommands != nil {
 		return c.userCommands
 	}
 
-	c.userCommands = &UserCommands{
-		bAPI: c.bAPI,
-		sAPI: c.sAPI,
-		kbd:  c.kbd,
-	}
-
+	c.userCommands = InitUserCommands(c.bAPI, c.sAPI, c.kbd)
 	return c.userCommands
 }

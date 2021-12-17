@@ -3,7 +3,9 @@ package static
 // Набор поддерживаемых ботом команд
 const (
 	BOT__CMD__START = "/start"
+	BOT__CMD__HELP  = "/help"
 	BOT__CMD__SKIP  = "/skip"
+	BOT__CMD__DEV   = "/dev"
 )
 
 // Набор ресурсов для кнопок

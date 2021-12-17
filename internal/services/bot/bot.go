@@ -96,6 +96,14 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 				go bot.error(update, bot.CancelAnyAction(ctx, update, payload))
 				continue
 
+			case static.BOT__CMD__DEV:
+				go bot.error(update, bot.cmd.Base().Dev(ctx, update))
+				continue
+
+			case static.BOT__CMD__HELP:
+				go bot.error(update, bot.cmd.Base().Help(ctx, update))
+				continue
+
 			default:
 				continue
 			}
@@ -117,6 +125,15 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 
 			case static.BOT__BTN__BASE__SUPPORT:
 				go bot.error(update, bot.m.Base().SupportRequest(ctx, update))
+				continue
+
+			case static.BOT__BTN__BASE__ABOUT_BOT:
+				go bot.error(update, bot.m.Base().AboutBot(ctx, update))
+				continue
+
+			case static.BOT__BTN__BASE__OPERATORS:
+				go bot.error(update, bot.m.Base().Operators(ctx, update))
+				continue
 
 			default:
 				continue
