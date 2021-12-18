@@ -168,8 +168,9 @@ func (m *ModExchanges) ReceiveAsResultOfExchange(ctx context.Context, update tgb
 
 	if len(coins) > 0 {
 		msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Какую валюту хочешь получить?")
-		msg.ReplyMarkup = m.kbd.Exchange().ReceiveAsResultOfExchangeList(coins, p["From"].(string))
 	}
+
+	msg.ReplyMarkup = m.kbd.Exchange().ReceiveAsResultOfExchangeList(coins, p["From"].(string))
 
 	m.bAPI.Send(msg)
 	return nil

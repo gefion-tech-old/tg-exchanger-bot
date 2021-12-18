@@ -17,6 +17,15 @@ type ExchangeKeyboardsI interface {
 	ExchangeCoinsList(arr []*models.Coin) tgbotapi.InlineKeyboardMarkup
 	ReceiveAsResultOfExchangeList(arr []*models.Coin, from string) tgbotapi.InlineKeyboardMarkup
 	ReqAmountOffers(from string) tgbotapi.InlineKeyboardMarkup
+	PayPage(url string) tgbotapi.InlineKeyboardMarkup
+}
+
+func (kb *ExchangeKeyboards) PayPage(url string) tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("Перейти на страницу", url),
+		),
+	)
 }
 
 // Клавиатура для вывода списка валют, которых можно ПОМЕНЯТЬ

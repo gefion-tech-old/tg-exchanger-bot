@@ -41,6 +41,9 @@ func (m *ModExchanges) CreateLinkForPayment(ctx context.Context, update tgbotapi
 			return nil
 		}
 
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Хорошо, ваша ссылка на страницу с формой оплаты 👇")
+		msg.ReplyMarkup = m.kbd.Exchange().PayPage("https://some.com")
+		m.bAPI.Send(msg)
 		return nil
 	}
 
