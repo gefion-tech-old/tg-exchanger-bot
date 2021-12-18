@@ -19,7 +19,10 @@ func (m *ModExchanges) NewExchange(ctx context.Context, update tgbotapi.Update) 
 	*/
 
 	if update.CallbackQuery != nil {
-		rMsg := tgbotapi.NewDeleteMessage(update.Message.Chat.ID, update.Message.MessageID)
+		rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID-1)
+		m.bAPI.Send(rMsg)
+
+		rMsg = tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 		m.bAPI.Send(rMsg)
 	}
 
