@@ -4,7 +4,8 @@ SERVICE=bot
 .PHONY: init
 
 init:	
-	mkdir logs
+	mkdir -p tmp
+	mkdir -p logs
 
 .PHONY: run
 
