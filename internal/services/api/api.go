@@ -2,11 +2,13 @@ package api
 
 import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
+	"github.com/sirupsen/logrus"
 )
 
 type Api struct {
 	config  *config.ApiConfig
 	bConfig *config.BotConfig
+	logger  *logrus.Logger
 
 	userReq         UserRequestsI
 	msgReq          MessageRequestsI
@@ -26,10 +28,11 @@ type ApiI interface {
 	Exchanger() ExchangerRequestsI
 }
 
-func Init(c *config.ApiConfig, bC *config.BotConfig) ApiI {
+func Init(c *config.ApiConfig, bC *config.BotConfig, l *logrus.Logger) ApiI {
 	return &Api{
 		config:  c,
 		bConfig: bC,
+		logger:  l,
 	}
 }
 
@@ -38,7 +41,7 @@ func (api *Api) Exchanger() ExchangerRequestsI {
 		return api.exchangerReq
 	}
 
-	api.exchangerReq = InitExchangerRequests(api.config.Url)
+	api.exchangerReq = InitExchangerRequests(api.config.Url, api.logger)
 	return api.exchangerReq
 }
 
@@ -47,7 +50,7 @@ func (api *Api) Telegram() TelegramRequestsI {
 		return api.tgReq
 	}
 
-	api.tgReq = InitTelegramRequests("https://api.telegram.org/", api.bConfig.Token)
+	api.tgReq = InitTelegramRequests("https://api.telegram.org/", api.bConfig.Token, api.logger)
 	return api.tgReq
 }
 
@@ -56,7 +59,7 @@ func (api *Api) Notification() NotificationRequestsI {
 		return api.notificationReq
 	}
 
-	api.notificationReq = InitNotificationRequests(api.config.Url)
+	api.notificationReq = InitNotificationRequests(api.config.Url, api.logger)
 	return api.notificationReq
 }
 
@@ -65,7 +68,7 @@ func (api *Api) Bill() BillRequestsI {
 		return api.billReq
 	}
 
-	api.billReq = InitBillRequests(api.config.Url)
+	api.billReq = InitBillRequests(api.config.Url, api.logger)
 	return api.billReq
 }
 
@@ -74,7 +77,7 @@ func (api *Api) Message() MessageRequestsI {
 		return api.msgReq
 	}
 
-	api.msgReq = InitMessageRequests(api.config.Url)
+	api.msgReq = InitMessageRequests(api.config.Url, api.logger)
 	return api.msgReq
 }
 
@@ -83,6 +86,6 @@ func (api *Api) User() UserRequestsI {
 		return api.userReq
 	}
 
-	api.userReq = InitUserRequests(api.config.Url)
+	api.userReq = InitUserRequests(api.config.Url, api.logger)
 	return api.userReq
 }

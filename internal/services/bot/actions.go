@@ -9,12 +9,15 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/mitchellh/mapstructure"
 	"github.com/valyala/fasthttp"
 )
 
 func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payload map[string]interface{}) error {
+	defer tools.Recovery(bot.logger)
+
 	action := models.UserAction{}
 	if err := mapstructure.Decode(payload, &action); err != nil {
 		return err
@@ -52,6 +55,13 @@ func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payl
 	case static.BOT__A__EX__NEW_EXCHAGE:
 		switch action.Step {
 		case 1:
+			if p["CbQ"] == static.BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE {
+				rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID-2)
+				bot.botAPI.Send(rMsg)
+
+				return bot.m.Exchange().ReceiveAsResultOfExchange(ctx, update, p)
+			}
+
 			return bot.m.Exchange().CreateLinkForPayment(ctx, update, &action)
 		default:
 			return nil
@@ -63,6 +73,8 @@ func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payl
 }
 
 func (bot *Bot) CancelAnyAction(ctx context.Context, update tgbotapi.Update, payload map[string]interface{}) error {
+	defer tools.Recovery(bot.logger)
+
 	if err := bot.redis.UserActions().Delete(update.Message.Chat.ID); err != nil {
 		return err
 	}

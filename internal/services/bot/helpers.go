@@ -7,6 +7,7 @@ import (
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	"github.com/go-redis/redis/v7"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/nsqio/go-nsq"
@@ -14,6 +15,8 @@ import (
 
 // Метод слушатель NSQ событий
 func (bot *Bot) HandleMessage(m *nsq.Message) error {
+	defer tools.Recovery(bot.logger)
+
 	nMsg := models.MessageEvent{}
 	if err := json.Unmarshal(m.Body, &nMsg); err != nil {
 		return err
@@ -29,6 +32,8 @@ func (bot *Bot) HandleMessage(m *nsq.Message) error {
 // Исключением является команда /skip которая позволяет отменить
 // любое начатое действие
 func (bot *Bot) action(update tgbotapi.Update) (map[string]interface{}, bool) {
+	defer tools.Recovery(bot.logger)
+
 	data, err := bot.redis.UserActions().Fetch(int64(update.Message.Chat.ID))
 	switch err {
 	// Значит есть активное действие
@@ -57,6 +62,8 @@ func (bot *Bot) action(update tgbotapi.Update) (map[string]interface{}, bool) {
 
 // Метод хелпер для обработки ошибок из нижестоящих хендлеров
 func (bot *Bot) error(update tgbotapi.Update, errs ...error) {
+	defer tools.Recovery(bot.logger)
+
 	for i := 0; i < len(errs); i++ {
 		if errs[i] != nil {
 			msg := tgbotapi.NewMessage(int64(update.Message.Chat.ID), "❌ Похоже произошла какая-то ошибка ❌")
@@ -94,6 +101,8 @@ func (bot *Bot) check(update tgbotapi.Update) bool {
 // Вспомогательный метод
 // Для перезаписи объекта update
 func (bot *Bot) rewriter(update tgbotapi.Update) tgbotapi.Update {
+	defer tools.Recovery(bot.logger)
+
 	// Если получили Message а CallbackQuery пустой
 	if update.Message != nil {
 		update.CallbackQuery = &tgbotapi.CallbackQuery{

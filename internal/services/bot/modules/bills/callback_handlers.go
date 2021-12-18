@@ -24,6 +24,8 @@ import (
 )
 
 func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
+	defer tools.Recovery(m.logger)
+
 	if update.Message.Photo != nil {
 		if len(*update.Message.Photo) < 3 {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось обраотать изображение :(\nИзображение низкого качества.")
@@ -92,6 +94,8 @@ func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Updat
 
 // Если пользователь ввел не ту карту и хочет отменить этот шаг
 func (m *ModBills) AddNewBillStepThreeInCorrect(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
+	defer tools.Recovery(m.logger)
+
 	action.MetaData = nil
 	action.Step--
 	if err := m.redis.UserActions().New(update.CallbackQuery.Message.Chat.ID, action); err != nil {
@@ -102,6 +106,8 @@ func (m *ModBills) AddNewBillStepThreeInCorrect(ctx context.Context, update tgbo
 }
 
 func (m *ModBills) AddNewBillStepThreeCorrect(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
+	defer tools.Recovery(m.logger)
+
 	c := tools.VerificationCode(false)
 	action.MetaData["Code"] = c
 	action.Step++
@@ -121,6 +127,8 @@ func (m *ModBills) AddNewBillStepThreeCorrect(ctx context.Context, update tgbota
 }
 
 func (m *ModBills) AddNewBillStepTwo(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
+	defer tools.Recovery(m.logger)
+
 	// Валидация номера карты
 	pattern := `^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})$`
 	if err := validation.Validate(update.Message.Text, validation.Required, validation.Match(regexp.MustCompile(pattern))); err != nil {
@@ -145,6 +153,8 @@ func (m *ModBills) AddNewBillStepTwo(ctx context.Context, update tgbotapi.Update
 
 // Запрос у пользователя номера карты
 func (m *ModBills) AddNewBillStepOne(ctx context.Context, update tgbotapi.Update) error {
+	defer tools.Recovery(m.logger)
+
 	// Создание в redis пользовательского действия
 	if err := m.redis.UserActions().New(update.CallbackQuery.Message.Chat.ID, &models.UserAction{
 		ActionType: static.BOT__A__BL__ADD_NEW_BILL,
@@ -173,6 +183,8 @@ func (m *ModBills) AddNewBillStepOne(ctx context.Context, update tgbotapi.Update
 // Скачивает изображение отправленное пользователем
 // С удаленного сервера telegram
 func (m *ModBills) download(ctx context.Context, update tgbotapi.Update) (string, error) {
+	defer tools.Recovery(m.logger)
+
 	i := 1
 	for _, f := range *update.Message.Photo {
 		if i == len(*update.Message.Photo) {
@@ -227,5 +239,4 @@ func (m *ModBills) download(ctx context.Context, update tgbotapi.Update) (string
 	}
 
 	return "", nil
-
 }

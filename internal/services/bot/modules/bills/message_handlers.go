@@ -8,11 +8,14 @@ import (
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/valyala/fasthttp"
 )
 
 func (m *ModBills) MyBills(ctx context.Context, update tgbotapi.Update) error {
+	defer tools.Recovery(m.logger)
+
 	// Вызываю через повторитель метод получения счетов пользователя
 	r := api.Retry(m.sAPI.Bill().GetAll, 3, time.Second)
 	resp, err := r(ctx, map[string]interface{}{

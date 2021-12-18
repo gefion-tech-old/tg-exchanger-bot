@@ -3,24 +3,30 @@ package api
 import (
 	"context"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
 type MessageRequests struct {
-	url string
+	url    string
+	logger *logrus.Logger
 }
 
 type MessageRequestsI interface {
 	Get(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
-func InitMessageRequests(u string) MessageRequestsI {
+func InitMessageRequests(u string, l *logrus.Logger) MessageRequestsI {
 	return &MessageRequests{
-		url: u,
+		url:    u,
+		logger: l,
 	}
 }
 
 func (r *MessageRequests) Get(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethod("GET")
 	req.Header.SetContentType("application/json")

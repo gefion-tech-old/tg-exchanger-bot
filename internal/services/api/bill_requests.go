@@ -4,24 +4,30 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
 type BillRequests struct {
-	url string
+	url    string
+	logger *logrus.Logger
 }
 
 type BillRequestsI interface {
 	GetAll(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
-func InitBillRequests(u string) BillRequestsI {
+func InitBillRequests(u string, l *logrus.Logger) BillRequestsI {
 	return &BillRequests{
-		url: u,
+		url:    u,
+		logger: l,
 	}
 }
 
 func (r *BillRequests) GetAll(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethod("GET")
 	req.Header.SetContentType("application/json")

@@ -9,11 +9,15 @@ import (
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
-func GetMessage(ctx context.Context, update tgbotapi.Update, sAPI api.ApiI, connector string, params ...interface{}) (*models.Message, error) {
+func GetMessage(ctx context.Context, update tgbotapi.Update, sAPI api.ApiI, connector string, logger *logrus.Logger, params ...interface{}) (*models.Message, error) {
+	defer tools.Recovery(logger)
+
 	ctx = context.WithValue(ctx, api.MessageConnectorCtxKey, connector)
 	r := api.Retry(sAPI.Message().Get, 3, time.Second)
 

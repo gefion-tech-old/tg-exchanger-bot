@@ -13,14 +13,17 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/nsqstore"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/redisstore"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/nsqio/go-nsq"
+	"github.com/sirupsen/logrus"
 )
 
 type Bot struct {
 	botAPI *tgbotapi.BotAPI
 	sAPI   api.ApiI
 	cnf    *config.BotConfig
+	logger *logrus.Logger
 	redis  redisstore.RedisStoreI
 	m      modules.BotModulesI
 	cmd    commands.CommandsI
@@ -36,15 +39,16 @@ type BotI interface {
 	ConnectNsqConsumers(bConsumers *nsqstore.BotConsumers)
 }
 
-func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, redis redisstore.RedisStoreI, cnf *config.BotConfig) BotI {
+func Init(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, redis redisstore.RedisStoreI, cnf *config.BotConfig, l *logrus.Logger) BotI {
 	kb := keyboards.InitKeyboards()
-	mod := modules.InitBotModules(bAPI, kb, redis, sAPI, cnf)
-	cmd := commands.InitCommands(bAPI, kb, sAPI)
+	mod := modules.InitBotModules(bAPI, kb, redis, sAPI, cnf, l)
+	cmd := commands.InitCommands(bAPI, kb, sAPI, l)
 
 	return &Bot{
 		botAPI: bAPI,
 		sAPI:   sAPI,
 		cnf:    cnf,
+		logger: l,
 		redis:  redis,
 		cmd:    cmd,
 		kbd:    kb,
@@ -57,6 +61,8 @@ func (bot *Bot) ConnectNsqConsumers(bConsumers *nsqstore.BotConsumers) {
 }
 
 func (bot *Bot) HandleNsqEvent(consumer *nsq.Consumer, cnf *config.NsqConfig) error {
+	defer tools.Recovery(bot.logger)
+
 	for {
 		if err := consumer.ConnectToNSQLookupd(fmt.Sprintf("%s:%d", cnf.Host, cnf.Port)); err != nil {
 			return err
@@ -65,6 +71,8 @@ func (bot *Bot) HandleNsqEvent(consumer *nsq.Consumer, cnf *config.NsqConfig) er
 }
 
 func (bot *Bot) HandleBotEvent(ctx context.Context) error {
+	defer tools.Recovery(bot.logger)
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 

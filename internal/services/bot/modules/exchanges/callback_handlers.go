@@ -5,17 +5,21 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/valyala/fasthttp"
 )
 
 // @CallbackQuery BOT__CQ__EX__REQ_AMOUNT
 func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error {
+	defer tools.Recovery(m.logger)
+
 	// Получение обменника
 	r := api.Retry(m.sAPI.Exchanger().Get, 3, time.Second)
 	resp, err := r(ctx, map[string]interface{}{
@@ -27,6 +31,12 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 		return err
 	}
 	defer fasthttp.ReleaseResponse(resp)
+
+	if resp.StatusCode() != http.StatusOK {
+		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "❌ Не удалось получить данные актуального курса ❌")
+		m.bAPI.Send(msg)
+		return nil
+	}
 
 	body := map[string]interface{}{}
 	if err := json.Unmarshal(resp.Body(), &body); err != nil {
@@ -52,7 +62,10 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 		return err
 	}
 
-	rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
+	rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID-1)
+	m.bAPI.Send(rMsg)
+
+	rMsg = tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 	m.bAPI.Send(rMsg)
 
 	msgInfo := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, fmt.Sprintf("Обмен из *%s* в *%s*", p["From"], p["To"]))
@@ -120,6 +133,12 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 
 // @CallbackQuery BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE
 func (m *ModExchanges) ReceiveAsResultOfExchange(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error {
+	defer tools.Recovery(m.logger)
+
+	if err := m.redis.UserActions().Delete(update.CallbackQuery.Message.Chat.ID); err != nil {
+		return err
+	}
+
 	// Определение какие поддерживаются направления обмена для выбранной валюты
 	directions := []*models.Direction{}
 	for i := 0; i < len(models.DIRECTIONS); i++ {
@@ -140,7 +159,12 @@ func (m *ModExchanges) ReceiveAsResultOfExchange(ctx context.Context, update tgb
 	rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 	m.bAPI.Send(rMsg)
 
-	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "На данный момент по этой валюте нет поддерживаемых направлений обмена.")
+	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, fmt.Sprintf("Обмен из *%s*", p["From"]))
+	msg.ParseMode = tgbotapi.ModeMarkdown
+	msg.ReplyMarkup = m.kbd.Base().BaseStartReplyMarkup()
+	m.bAPI.Send(msg)
+
+	msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "На данный момент по этой валюте нет поддерживаемых направлений обмена.")
 
 	if len(coins) > 0 {
 		msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Какую валюту хочешь получить?")
@@ -155,6 +179,8 @@ func (m *ModExchanges) ReceiveAsResultOfExchange(ctx context.Context, update tgb
 // Запрашивает актуальные котировки валют
 // Находит нужную котировку и возвращает ее
 func (m *ModExchanges) quotes(ctx context.Context, update tgbotapi.Update, url string) (*models.OneObmen, error) {
+	defer tools.Recovery(m.logger)
+
 	r := api.Retry(m.sAPI.Exchanger().GetQuotesXML, 3, time.Second)
 	resp, err := r(ctx, map[string]interface{}{
 		"url": url,

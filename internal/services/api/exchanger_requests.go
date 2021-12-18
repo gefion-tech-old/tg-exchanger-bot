@@ -3,11 +3,14 @@ package api
 import (
 	"context"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
 type ExchangerRequests struct {
-	url string
+	url    string
+	logger *logrus.Logger
 }
 
 type ExchangerRequestsI interface {
@@ -15,13 +18,16 @@ type ExchangerRequestsI interface {
 	GetQuotesXML(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
-func InitExchangerRequests(u string) ExchangerRequestsI {
+func InitExchangerRequests(u string, l *logrus.Logger) ExchangerRequestsI {
 	return &ExchangerRequests{
-		url: u,
+		url:    u,
+		logger: l,
 	}
 }
 
 func (r *ExchangerRequests) Get(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethod("GET")
 	req.Header.SetContentType("application/json")

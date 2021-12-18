@@ -9,31 +9,37 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/helpers"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/sync/errgroup"
 )
 
 type UserCommands struct {
-	bAPI *tgbotapi.BotAPI
-	sAPI api.ApiI
-	kbd  keyboards.KeyboardsI
+	bAPI   *tgbotapi.BotAPI
+	sAPI   api.ApiI
+	kbd    keyboards.KeyboardsI
+	logger *logrus.Logger
 }
 
 type UserCommandsI interface {
 	Start(ctx context.Context, update tgbotapi.Update) error
 }
 
-func InitUserCommands(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, kbd keyboards.KeyboardsI) UserCommandsI {
+func InitUserCommands(bAPI *tgbotapi.BotAPI, sAPI api.ApiI, kbd keyboards.KeyboardsI, l *logrus.Logger) UserCommandsI {
 	return &UserCommands{
-		bAPI: bAPI,
-		sAPI: sAPI,
-		kbd:  kbd,
+		bAPI:   bAPI,
+		sAPI:   sAPI,
+		kbd:    kbd,
+		logger: l,
 	}
 }
 
 // @Command /start
 func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error {
+	defer tools.Recovery(c.logger)
+
 	errs, _ := errgroup.WithContext(ctx)
 
 	cHelloNewUserMsg := make(chan *models.Message)
@@ -42,7 +48,7 @@ func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error 
 	// Подгружаю сообщение для нового пользователя
 	errs.Go(func() error {
 		defer close(cHelloNewUserMsg)
-		msg, err := helpers.GetMessage(ctx, update, c.sAPI, "hello_msg_new_user", update.Message.From.FirstName)
+		msg, err := helpers.GetMessage(ctx, update, c.sAPI, "hello_msg_new_user", c.logger, update.Message.From.FirstName)
 		if err != nil {
 			return err
 		}
@@ -54,7 +60,7 @@ func (c *UserCommands) Start(ctx context.Context, update tgbotapi.Update) error 
 	// Подгружаю сообщение для уже добавленого пользователя
 	errs.Go(func() error {
 		defer close(cHelloUserMsg)
-		msg, err := helpers.GetMessage(ctx, update, c.sAPI, "hello_msg_user", update.Message.From.FirstName)
+		msg, err := helpers.GetMessage(ctx, update, c.sAPI, "hello_msg_user", c.logger, update.Message.From.FirstName)
 		if err != nil {
 			return err
 		}

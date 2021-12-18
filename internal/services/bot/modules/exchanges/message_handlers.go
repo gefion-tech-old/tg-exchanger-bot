@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -11,6 +12,8 @@ import (
 // @CallbackQuery BOT__CQ__EX__COINS_TO_EXCHAGE
 // Отдает пользователю клав-список монет которые он может поменять
 func (m *ModExchanges) NewExchange(ctx context.Context, update tgbotapi.Update) error {
+	defer tools.Recovery(m.logger)
+
 	/*
 		<ВЫПОЛНЕНИЕ ЗАПРОСА НА ПОЛУЧЕНИЕ ДОСТУПНЫХ ВАЛЮТ ДЛЯ ОБМЕНА>
 	*/

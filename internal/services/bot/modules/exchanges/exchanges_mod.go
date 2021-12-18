@@ -8,15 +8,17 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/db/redisstore"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/sirupsen/logrus"
 )
 
 var _ ModExchangesI = (*ModExchanges)(nil)
 
 type ModExchanges struct {
-	bAPI  *tgbotapi.BotAPI
-	sAPI  api.ApiI
-	redis redisstore.RedisStoreI
-	kbd   keyboards.KeyboardsI
+	bAPI   *tgbotapi.BotAPI
+	sAPI   api.ApiI
+	redis  redisstore.RedisStoreI
+	kbd    keyboards.KeyboardsI
+	logger *logrus.Logger
 }
 
 type ModExchangesI interface {
@@ -39,11 +41,12 @@ type ModExchangesI interface {
 	NewExchange(ctx context.Context, update tgbotapi.Update) error
 }
 
-func InitModExchanges(bAPI *tgbotapi.BotAPI, servAPI api.ApiI, redis redisstore.RedisStoreI, k keyboards.KeyboardsI) ModExchangesI {
+func InitModExchanges(bAPI *tgbotapi.BotAPI, servAPI api.ApiI, redis redisstore.RedisStoreI, k keyboards.KeyboardsI, l *logrus.Logger) ModExchangesI {
 	return &ModExchanges{
-		bAPI:  bAPI,
-		sAPI:  servAPI,
-		redis: redis,
-		kbd:   k,
+		bAPI:   bAPI,
+		sAPI:   servAPI,
+		redis:  redis,
+		kbd:    k,
+		logger: l,
 	}
 }

@@ -5,24 +5,30 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
 type NotificationRequests struct {
-	url string
+	url    string
+	logger *logrus.Logger
 }
 
 type NotificationRequestsI interface {
 	Create(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
-func InitNotificationRequests(u string) NotificationRequestsI {
+func InitNotificationRequests(u string, l *logrus.Logger) NotificationRequestsI {
 	return &NotificationRequests{
-		url: u,
+		url:    u,
+		logger: l,
 	}
 }
 
 func (r *NotificationRequests) Create(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, err

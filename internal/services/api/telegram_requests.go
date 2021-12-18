@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
 type TelegramRequests struct {
-	url   string
-	token string
+	url    string
+	token  string
+	logger *logrus.Logger
 }
 
 type TelegramRequestsI interface {
@@ -17,15 +20,18 @@ type TelegramRequestsI interface {
 	DownloadFile(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
-func InitTelegramRequests(u, t string) TelegramRequestsI {
+func InitTelegramRequests(u, t string, l *logrus.Logger) TelegramRequestsI {
 	return &TelegramRequests{
-		url:   u,
-		token: t,
+		url:    u,
+		token:  t,
+		logger: l,
 	}
 
 }
 
 func (r *TelegramRequests) GetFileDate(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethod("GET")
 	req.Header.SetContentType("application/json")

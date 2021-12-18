@@ -6,10 +6,13 @@ import (
 	"strconv"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func (m *ModExchanges) CreateLinkForPayment(ctx context.Context, update tgbotapi.Update, action *models.UserAction) error {
+	defer tools.Recovery(m.logger)
+
 	if update.Message.Text != "" {
 		// Регулярка для получения дробного значения из текста
 		re := regexp.MustCompile(`(?:\d+(?:\.\d*)?|\.\d+)`)
