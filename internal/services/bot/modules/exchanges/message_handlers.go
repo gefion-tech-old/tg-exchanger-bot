@@ -26,11 +26,7 @@ func (m *ModExchanges) NewExchange(ctx context.Context, update tgbotapi.Update) 
 		m.bAPI.Send(rMsg)
 	}
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Список валют доступных для обмена.")
-	msg.ReplyMarkup = m.kbd.Base().BaseStartReplyMarkup()
-	m.bAPI.Send(msg)
-
-	msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Выбери валюту, которую нужно обменять 👇")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выбери валюту, которую нужно обменять 👇")
 	msg.ReplyMarkup = m.kbd.Exchange().ExchangeCoinsList(models.COINS)
 	m.bAPI.Send(msg)
 	return nil

@@ -18,6 +18,27 @@ type ExchangeKeyboardsI interface {
 	ReceiveAsResultOfExchangeList(arr []*models.Coin, from string) tgbotapi.InlineKeyboardMarkup
 	ReqAmountOffers(from string) tgbotapi.InlineKeyboardMarkup
 	PayPage(url string) tgbotapi.InlineKeyboardMarkup
+	СhooseBill(arr []models.Bill, from, to string) tgbotapi.InlineKeyboardMarkup
+}
+
+//  Список пользовательских счетов для выбора с какого проводить обмен
+func (kb *ExchangeKeyboards) СhooseBill(arr []models.Bill, from, to string) tgbotapi.InlineKeyboardMarkup {
+	var k tgbotapi.InlineKeyboardMarkup
+	for i := 0; i < len(arr); i++ {
+		k.InlineKeyboard = append(k.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(
+				arr[i].Bill,
+				fmt.Sprintf(`{"CbQ": "%s", "ID": %d, "From": "%s", "To": "%s"}`, static.BOT__CQ__EX__REQ_AMOUNT, arr[i].ID, from, to),
+			),
+		))
+	}
+
+	k.InlineKeyboard = append(k.InlineKeyboard,
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("« Назад", fmt.Sprintf(`{"CbQ": "%s",  "From": "%s"}`, static.BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE, from)),
+		))
+
+	return k
 }
 
 func (kb *ExchangeKeyboards) PayPage(url string) tgbotapi.InlineKeyboardMarkup {
@@ -55,7 +76,7 @@ func (kb *ExchangeKeyboards) ReceiveAsResultOfExchangeList(arr []*models.Coin, f
 		k.InlineKeyboard = append(k.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(
 				arr[i].Name,
-				fmt.Sprintf(`{"CbQ": "%s", "From": "%s", "To": "%s"}`, static.BOT__CQ__EX__REQ_AMOUNT, from, arr[i].ShortName),
+				fmt.Sprintf(`{"CbQ": "%s", "From": "%s", "To": "%s"}`, static.BOT__CQ__EX__REQ_BILL, from, arr[i].ShortName),
 			),
 		))
 	}

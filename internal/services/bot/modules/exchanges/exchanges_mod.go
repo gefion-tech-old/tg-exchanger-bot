@@ -31,6 +31,8 @@ type ModExchangesI interface {
 	// @CallbackQuery BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE
 	ReceiveAsResultOfExchange(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error
 
+	СhooseBill(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error
+
 	// @CallbackQuery BOT__CQ__EX__REQ_AMOUNT
 	ReqAmount(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error
 

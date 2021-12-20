@@ -13,6 +13,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/mitchellh/mapstructure"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/sync/errgroup"
 )
 
 func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payload map[string]interface{}) error {
@@ -75,35 +76,45 @@ func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payl
 func (bot *Bot) CancelAnyAction(ctx context.Context, update tgbotapi.Update, payload map[string]interface{}) error {
 	defer tools.Recovery(bot.logger)
 
-	if err := bot.redis.UserActions().Delete(update.Message.Chat.ID); err != nil {
-		return err
-	}
+	errs, _ := errgroup.WithContext(ctx)
 
-	if payload["ActionType"] != nil {
-		if int(payload["ActionType"].(float64)) == static.BOT__A__EX__NEW_EXCHAGE {
-			action := models.UserAction{}
-			if err := mapstructure.Decode(payload, &action); err != nil {
-				return err
-			}
+	errs.Go(func() error {
+		return bot.redis.UserActions().Delete(update.Message.Chat.ID)
+	})
 
-			// Вызываю через повторитель метод отправки уведомления на сервер
-			r := api.Retry(bot.sAPI.Notification().Create, 3, time.Second)
-			resp, err := r(ctx, map[string]interface{}{
-				"type": action.ActionType,
-				"meta_data": map[string]interface{}{
-					"exchange_from": action.MetaData["From"],
-					"exchange_to":   action.MetaData["To"],
-				},
-				"user": map[string]interface{}{
-					"chat_id":  action.User.ChatID,
-					"username": action.User.Username,
-				},
-			})
-			if err != nil {
-				return errors.ErrBotServerNoAnswer
+	errs.Go(func() error {
+		if payload["ActionType"] != nil {
+			if int(payload["ActionType"].(float64)) == static.BOT__A__EX__NEW_EXCHAGE {
+				action := models.UserAction{}
+				if err := mapstructure.Decode(payload, &action); err != nil {
+					return err
+				}
+
+				// Вызываю через повторитель метод отправки уведомления на сервер
+				r := api.Retry(bot.sAPI.Notification().Create, 3, time.Second)
+				resp, err := r(ctx, map[string]interface{}{
+					"type": action.ActionType,
+					"meta_data": map[string]interface{}{
+						"exchange_from": action.MetaData["From"],
+						"exchange_to":   action.MetaData["To"],
+					},
+					"user": map[string]interface{}{
+						"chat_id":  action.User.ChatID,
+						"username": action.User.Username,
+					},
+				})
+				if err != nil {
+					return errors.ErrBotServerNoAnswer
+				}
+				defer fasthttp.ReleaseResponse(resp)
 			}
-			defer fasthttp.ReleaseResponse(resp)
 		}
+
+		return nil
+	})
+
+	if errs.Wait() != nil {
+		return errs.Wait()
 	}
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Действие успешно отменено.")

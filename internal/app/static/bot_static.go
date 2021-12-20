@@ -28,6 +28,8 @@ const (
 	BOT__CQ__EX__COINS_TO_EXCHAGE       = "c_to_ex"      // Показать список валют которые можно обменять
 	BOT__CQ__EX__SELECT_COIN_TO_EXCHAGE = "slct_c_to_ex" // Показать список монет которые можно получить
 	BOT__CQ__EX__REQ_AMOUNT             = "req_em_ex"    // Запросить сумму обмена
+	BOT__CQ__EX__CHOOSE_BILL            = "ch_bill"      // Выбран счет с которого будет производиться операция
+	BOT__CQ__EX__REQ_BILL               = "req_bill"     // Запросить счет
 )
 
 // Нобор CallbackQuery для модуля Bills

@@ -169,6 +169,9 @@ func (bot *Bot) HandleBotEvent(ctx context.Context) error {
 				go bot.error(bot.rewriter(update), bot.m.Exchange().ReceiveAsResultOfExchange(ctx, update, p))
 				continue
 
+			case static.BOT__CQ__EX__REQ_BILL:
+				go bot.error(bot.rewriter(update), bot.m.Exchange().СhooseBill(ctx, update, p))
+
 			case static.BOT__CQ__EX__REQ_AMOUNT:
 				go bot.error(bot.rewriter(update), bot.m.Exchange().ReqAmount(ctx, update, p))
 				continue

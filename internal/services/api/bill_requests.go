@@ -15,6 +15,7 @@ type BillRequests struct {
 }
 
 type BillRequestsI interface {
+	GetBill(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 	GetAll(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
@@ -23,6 +24,22 @@ func InitBillRequests(u string, l *logrus.Logger) BillRequestsI {
 		url:    u,
 		logger: l,
 	}
+}
+
+func (r *BillRequests) GetBill(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
+	req := fasthttp.AcquireRequest()
+	req.Header.SetMethod("GET")
+	req.Header.SetContentType("application/json")
+	req.SetRequestURI(fmt.Sprintf("%s/api/v1/bot/user/bill/%d", r.url, body["bill_id"]))
+	res := fasthttp.AcquireResponse()
+	if err := fasthttp.Do(req, res); err != nil {
+		return nil, err
+	}
+
+	defer fasthttp.ReleaseRequest(req)
+	return res, nil
 }
 
 func (r *BillRequests) GetAll(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {

@@ -14,52 +14,124 @@ import (
 	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/sync/errgroup"
 )
 
-// @CallbackQuery BOT__CQ__EX__REQ_AMOUNT
-func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error {
+func (m *ModExchanges) СhooseBill(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error {
 	defer tools.Recovery(m.logger)
 
-	// Получение обменника
-	r := api.Retry(m.sAPI.Exchanger().Get, 3, time.Second)
+	// Вызываю через повторитель метод получения счетов пользователя
+	r := api.Retry(m.sAPI.Bill().GetAll, 3, time.Second)
 	resp, err := r(ctx, map[string]interface{}{
-		"name": "1obmen",
+		"chat_id": update.CallbackQuery.Message.Chat.ID,
 	})
 	if err != nil {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Сервер не отвечает")
+		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Сервер не отвечает")
 		m.bAPI.Send(msg)
 		return err
 	}
 	defer fasthttp.ReleaseResponse(resp)
 
-	if resp.StatusCode() != http.StatusOK {
-		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "❌ Не удалось получить данные актуального курса ❌")
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		bills := []models.Bill{}
+
+		if err := json.Unmarshal(resp.Body(), &bills); err != nil {
+			return err
+		}
+
+		rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
+		m.bAPI.Send(rMsg)
+
+		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберите счет:")
+
+		if len(bills) == 0 {
+			msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберите счет: \n\nУ вас нет добавленных счетов")
+		}
+
+		msg.ReplyMarkup = m.kbd.Exchange().СhooseBill(bills, p["From"].(string), p["To"].(string))
 		m.bAPI.Send(msg)
+	}
+
+	return nil
+}
+
+// @CallbackQuery BOT__CQ__EX__REQ_AMOUNT
+func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p map[string]interface{}) error {
+	defer tools.Recovery(m.logger)
+
+	errs, _ := errgroup.WithContext(ctx)
+
+	cE := make(chan *models.Exchanger, 1)
+	cB := make(chan *models.Bill, 1)
+
+	// Получение информации по выбранному счету
+	errs.Go(func() error {
+		defer close(cB)
+
+		// Вызываю через повторитель метод получения счетов пользователя
+		r := api.Retry(m.sAPI.Bill().GetBill, 3, time.Second)
+		resp, err := r(ctx, map[string]interface{}{
+			"bill_id": int(p["ID"].(float64)),
+		})
+		if err != nil {
+			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Сервер не отвечает")
+			m.bAPI.Send(msg)
+			return err
+		}
+		defer fasthttp.ReleaseResponse(resp)
+
+		if resp.StatusCode() != http.StatusOK {
+			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "❌ Не удалось получить по выбранному счету ❌")
+			m.bAPI.Send(msg)
+			return nil
+		}
+
+		body := models.Bill{}
+		if err := json.Unmarshal(resp.Body(), &body); err != nil {
+			return err
+		}
+
+		cB <- &body
 		return nil
-	}
+	})
 
-	body := map[string]interface{}{}
-	if err := json.Unmarshal(resp.Body(), &body); err != nil {
-		return err
-	}
+	// Получение информации по  обменнику
+	errs.Go(func() error {
+		defer close(cE)
 
-	// Создание в redis пользовательского действия
-	if err := m.redis.UserActions().New(update.CallbackQuery.Message.Chat.ID, &models.UserAction{
-		ActionType: static.BOT__A__EX__NEW_EXCHAGE,
-		Step:       1,
-		MetaData: map[string]interface{}{
-			"From": p["From"],
-			"To":   p["To"],
-		},
-		User: struct {
-			ChatID   int
-			Username string
-		}{
-			ChatID:   int(update.CallbackQuery.Message.Chat.ID),
-			Username: update.CallbackQuery.Message.Chat.UserName,
-		},
-	}); err != nil {
-		return err
+		// Получение обменника
+		r := api.Retry(m.sAPI.Exchanger().Get, 3, time.Second)
+		resp, err := r(ctx, map[string]interface{}{
+			"name": "1obmen",
+		})
+		if err != nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Сервер не отвечает")
+			m.bAPI.Send(msg)
+			return err
+		}
+		defer fasthttp.ReleaseResponse(resp)
+
+		if resp.StatusCode() != http.StatusOK {
+			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "❌ Не удалось получить данные актуального курса ❌")
+			m.bAPI.Send(msg)
+			return nil
+		}
+
+		body := models.Exchanger{}
+		if err := json.Unmarshal(resp.Body(), &body); err != nil {
+			return err
+		}
+
+		cE <- &body
+		return nil
+	})
+
+	e := <-cE
+	b := <-cB
+
+	if e == nil || b == nil {
+		return errs.Wait()
 	}
 
 	rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID-1)
@@ -77,7 +149,7 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 	waitM, _ := m.bAPI.Send(msg)
 
 	// Получение актуальных котировок
-	data, err := m.quotes(ctx, update, body["url"].(string))
+	data, err := m.quotes(ctx, update, e.UrlToParse)
 	if err != nil {
 		return err
 	}
@@ -101,6 +173,7 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 			MetaData: map[string]interface{}{
 				"From":      p["From"],
 				"To":        p["To"],
+				"Bill":      b.Bill,
 				"MinAmount": q.MinAmount,
 				"MaxAmount": q.MaxAmount,
 			},
@@ -121,7 +194,6 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 		text := fmt.Sprintf("Напиши сумму обмена 👇\n\n*От*: `%s`\n*До*: `%s`\n*Курс*: `%0.3f`", q.MinAmount, q.MaxAmount, q.In)
 		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, text)
 		msg.ParseMode = tgbotapi.ModeMarkdown
-		msg.ReplyMarkup = m.kbd.Exchange().ReqAmountOffers(p["From"].(string))
 		m.bAPI.Send(msg)
 		return nil
 	}
@@ -159,12 +231,7 @@ func (m *ModExchanges) ReceiveAsResultOfExchange(ctx context.Context, update tgb
 	rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 	m.bAPI.Send(rMsg)
 
-	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, fmt.Sprintf("Обмен из *%s*", p["From"]))
-	msg.ParseMode = tgbotapi.ModeMarkdown
-	msg.ReplyMarkup = m.kbd.Base().BaseStartReplyMarkup()
-	m.bAPI.Send(msg)
-
-	msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "На данный момент по этой валюте нет поддерживаемых направлений обмена.")
+	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "На данный момент по этой валюте нет поддерживаемых направлений обмена.")
 
 	if len(coins) > 0 {
 		msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Какую валюту хочешь получить?")
