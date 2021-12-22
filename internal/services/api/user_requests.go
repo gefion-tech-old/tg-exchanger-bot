@@ -44,7 +44,7 @@ func (r *UserRequests) Registration(ctx context.Context, body map[string]interfa
 	req.SetBody(b)
 	req.Header.SetMethod("POST")
 	req.Header.SetContentType("application/json")
-	req.SetRequestURI(fmt.Sprintf("%s/api/v1/bot/registration", r.url))
+	req.SetRequestURI(fmt.Sprintf("%s/api/v1/bot/user/registration", r.url))
 	res := fasthttp.AcquireResponse()
 	if err := fasthttp.Do(req, res); err != nil {
 		return nil, err
