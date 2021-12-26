@@ -2,7 +2,7 @@
 token = "2126215860:AAFG2mvnRYojY17lJPsqYwz2yhyszoJOBfY"
 developers = ["I0HuKc"]
 debug = false
-tmp = "/var/www/html/tmp"
+tmp = "/var/www/admin/tmp"
 
 [api]
 url = "http://80.87.197.206:4000"
