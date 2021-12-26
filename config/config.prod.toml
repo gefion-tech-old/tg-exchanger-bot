@@ -5,10 +5,10 @@ debug = false
 tmp = "/var/www/html/tmp"
 
 [api]
-url = "http://80.78.253.68:4000"
+url = "http://80.87.197.206:4000"
 
 [nsq]
-host = "80.78.253.68"
+host = "80.87.197.206"
 port = 4161
 
 [redis]
