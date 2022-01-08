@@ -32,6 +32,7 @@ func (m *ModBase) SupportRequest(ctx context.Context, update tgbotapi.Update) er
 	r := api.Retry(m.sAPI.Notification().Create, 3, time.Second)
 	resp, err := r(ctx, map[string]interface{}{
 		"type": static.BOT__A__BASE__REQ_SUPPORT,
+		"status": 1,
 		"user": map[string]interface{}{
 			"chat_id":  update.Message.From.ID,
 			"username": update.Message.From.UserName,

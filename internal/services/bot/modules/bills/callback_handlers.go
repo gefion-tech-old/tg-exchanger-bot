@@ -52,6 +52,7 @@ func (m *ModBills) AddNewBillStepFour(ctx context.Context, update tgbotapi.Updat
 		fmt.Println(img)
 		resp, err := r(ctx, map[string]interface{}{
 			"type": action.ActionType,
+			"status": 1,
 			"meta_data": map[string]interface{}{
 				"card_verification": map[string]interface{}{
 					"code":      action.MetaData["Code"],
