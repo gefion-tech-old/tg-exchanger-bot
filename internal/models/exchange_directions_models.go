@@ -22,6 +22,7 @@ type Coin struct {
 	ID        int
 	Name      string
 	ShortName string
+	Fiat      bool
 }
 
 type Direction struct {
@@ -31,14 +32,14 @@ type Direction struct {
 }
 
 var COINS = []*Coin{
-	{ID: 1, Name: "Bitcoin", ShortName: "BTC"},
-	{ID: 2, Name: "Ethereum", ShortName: "ETH"},
-	{ID: 3, Name: "Рубль", ShortName: "SBERRUB"},
-	{ID: 4, Name: "Tether ERC-20", ShortName: "USDT"},
-	{ID: 5, Name: "Advanced Cash", ShortName: "ADVCUSD"},
-	{ID: 6, Name: "Perfect Money", ShortName: "PMUSD"},
-	{ID: 7, Name: "Payeer", ShortName: "PRUSD"},
-	{ID: 8, Name: "Гривна", ShortName: "MONOBUAH"},
+	{ID: 1, Name: "Bitcoin", ShortName: "BTC", Fiat: false},
+	{ID: 2, Name: "Ethereum", ShortName: "ETH", Fiat: false},
+	{ID: 3, Name: "Рубль", ShortName: "SBERRUB", Fiat: true},
+	{ID: 4, Name: "Tether ERC-20", ShortName: "USDT", Fiat: false},
+	{ID: 5, Name: "Advanced Cash", ShortName: "ADVCUSD", Fiat: false},
+	{ID: 6, Name: "Perfect Money", ShortName: "PMUSD", Fiat: false},
+	{ID: 7, Name: "Payeer", ShortName: "PRUSD", Fiat: false},
+	{ID: 8, Name: "Гривна", ShortName: "MONOBUAH", Fiat: true},
 }
 
 var DIRECTIONS = []*Direction{

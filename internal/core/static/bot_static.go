@@ -43,9 +43,10 @@ const (
 
 // Набор возможных типов пользовательских действий
 const (
-	BOT__A__BL__ADD_NEW_BILL  = 854
-	BOT__A__EX__NEW_EXCHAGE   = 855
-	BOT__A__BASE__REQ_SUPPORT = 900
+	BOT__A__BL__ADD_NEW_BILL            = 854
+	BOT__A__EX__NEW_EXCHAGE             = 855
+	BOT__A__EX__NEW_EXCHAGE_WITH_ADRESS = 856
+	BOT__A__BASE__REQ_SUPPORT           = 900
 )
 
 // Набор типов сообщений из NSQ

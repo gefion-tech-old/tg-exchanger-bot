@@ -76,7 +76,7 @@ func (kb *ExchangeKeyboards) ReceiveAsResultOfExchangeList(arr []*models.Coin, f
 		k.InlineKeyboard = append(k.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(
 				arr[i].Name,
-				fmt.Sprintf(`{"CbQ": "%s", "From": "%s", "To": "%s"}`, static.BOT__CQ__EX__REQ_BILL, from, arr[i].ShortName),
+				fmt.Sprintf(`{"CbQ": "%s", "From": "%s", "To": "%s", "F": %t}`, static.BOT__CQ__EX__REQ_BILL, from, arr[i].ShortName, arr[i].Fiat),
 			),
 		))
 	}

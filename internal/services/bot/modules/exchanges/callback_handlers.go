@@ -35,23 +35,49 @@ func (m *ModExchanges) СhooseBill(ctx context.Context, update tgbotapi.Update, 
 
 	switch resp.StatusCode() {
 	case http.StatusOK:
-		bills := []models.Bill{}
-
-		if err := json.Unmarshal(resp.Body(), &bills); err != nil {
-			return err
-		}
-
+		// Удаляю предыдущее сообщение
 		rMsg := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 		m.bAPI.Send(rMsg)
 
-		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберите счет:")
+		// Если человек хочет получить фиатные деньги
+		if p["F"].(bool) {
+			bills := []models.Bill{}
 
-		if len(bills) == 0 {
-			msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберите счет: \n\nУ вас нет добавленных счетов")
+			if err := json.Unmarshal(resp.Body(), &bills); err != nil {
+				return err
+			}
+			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберите счет:")
+
+			if len(bills) == 0 {
+				msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберите счет: \n\nУ вас нет добавленных счетов")
+			}
+
+			msg.ReplyMarkup = m.kbd.Exchange().СhooseBill(bills, p["From"].(string), p["To"].(string))
+			m.bAPI.Send(msg)
+			return nil
 		}
 
-		msg.ReplyMarkup = m.kbd.Exchange().СhooseBill(bills, p["From"].(string), p["To"].(string))
+		// Если человек хочет получить крипту
+		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Хорошо, пришли адрес кошелька куда необходимо будет отправить деньги 👇")
+		msg.ReplyMarkup = m.kbd.Base().CancelAction()
 		m.bAPI.Send(msg)
+
+		return m.redis.UserActions().New(update.CallbackQuery.Message.Chat.ID, &models.UserAction{
+			ActionType: static.BOT__A__EX__NEW_EXCHAGE_WITH_ADRESS,
+			Step:       1,
+			MetaData: map[string]interface{}{
+				"From":   p["From"],
+				"To":     p["To"],
+				"ToFiat": p["F"],
+			},
+			User: struct {
+				ChatID   int
+				Username string
+			}{
+				ChatID:   int(update.CallbackQuery.Message.Chat.ID),
+				Username: update.CallbackQuery.Message.Chat.UserName,
+			},
+		})
 	}
 
 	return nil
@@ -174,6 +200,7 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 			MetaData: map[string]interface{}{
 				"From":      p["From"],
 				"To":        p["To"],
+				"ToFiat":    p["Fiat"],
 				"Bill":      b.Bill,
 				"Course":    q.In,
 				"MinAmount": strings.Split(q.MinAmount, " ")[0],

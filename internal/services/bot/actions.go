@@ -64,6 +64,16 @@ func (bot *Bot) ActionsHandler(ctx context.Context, update tgbotapi.Update, payl
 			}
 
 			return bot.m.Exchange().CreateLinkForPayment(ctx, update, &action)
+
+		default:
+			return nil
+		}
+
+	case static.BOT__A__EX__NEW_EXCHAGE_WITH_ADRESS:
+		switch action.Step {
+		case 1:
+			return bot.m.Exchange().HandleReceivedAddress(ctx, update, &action)
+
 		default:
 			return nil
 		}

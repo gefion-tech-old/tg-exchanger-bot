@@ -66,6 +66,7 @@ func (bot *Bot) error(update tgbotapi.Update, errs ...error) {
 
 	for i := 0; i < len(errs); i++ {
 		if errs[i] != nil {
+			fmt.Println(errs[i].Error())
 			msg := tgbotapi.NewMessage(int64(update.Message.Chat.ID), "❌ Похоже произошла какая-то ошибка ❌")
 			if errs[i] == sql.ErrNoRows {
 				msg = tgbotapi.NewMessage(int64(update.Message.Chat.ID), "❌ Запрашиваемый ресурс не найден ❌")
