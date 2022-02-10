@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/core/static"
@@ -174,8 +175,9 @@ func (m *ModExchanges) ReqAmount(ctx context.Context, update tgbotapi.Update, p 
 				"From":      p["From"],
 				"To":        p["To"],
 				"Bill":      b.Bill,
-				"MinAmount": q.MinAmount,
-				"MaxAmount": q.MaxAmount,
+				"Course":    q.In,
+				"MinAmount": strings.Split(q.MinAmount, " ")[0],
+				"MaxAmount": strings.Split(q.MaxAmount, " ")[0],
 			},
 			User: struct {
 				ChatID   int

@@ -51,9 +51,9 @@ func (m *ModExchanges) CreateLinkForPayment(ctx context.Context, update tgbotapi
 		resp, err := r(ctx, map[string]interface{}{
 			"merchant": "whitebit",
 
-			"exchange_from":   "USDTTRC20",
-			"exchange_to":     "SBERRUB",
-			"course":          "76.0947",
+			"exchange_from":   action.MetaData["From"],
+			"exchange_to":     action.MetaData["To"],
+			"course":          fmt.Sprintf("%f", action.MetaData["Course"]),
 			"expected_amount": 10,
 			"client_address":  "3MGgZg2k1bKd1n598xewrDsCdYUfi3JWgu",
 			"created_by": map[string]interface{}{
@@ -69,7 +69,7 @@ func (m *ModExchanges) CreateLinkForPayment(ctx context.Context, update tgbotapi
 		defer fasthttp.ReleaseResponse(resp)
 
 		if resp.StatusCode() != http.StatusOK {
-			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "❌ Не удалось получить данные актуального курса ❌")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "❌ Не удалось получить адрес ❌")
 			m.bAPI.Send(msg)
 			return nil
 		}
