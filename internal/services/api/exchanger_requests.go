@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"
 	"github.com/sirupsen/logrus"
@@ -16,6 +18,7 @@ type ExchangerRequests struct {
 type ExchangerRequestsI interface {
 	Get(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 	GetQuotesXML(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
+	GetAdress(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error)
 }
 
 func InitExchangerRequests(u string, l *logrus.Logger) ExchangerRequestsI {
@@ -23,6 +26,28 @@ func InitExchangerRequests(u string, l *logrus.Logger) ExchangerRequestsI {
 		url:    u,
 		logger: l,
 	}
+}
+
+func (r *ExchangerRequests) GetAdress(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
+	defer tools.Recovery(r.logger)
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req := fasthttp.AcquireRequest()
+	req.SetBody(b)
+	req.Header.SetMethod("POST")
+	req.Header.SetContentType("application/json")
+	req.SetRequestURI(fmt.Sprintf("%s/api/v1/admin/merchant-autopayout/%s/new-adress", r.url, body["merchant"]))
+	res := fasthttp.AcquireResponse()
+	if err := fasthttp.Do(req, res); err != nil {
+		return nil, err
+	}
+
+	defer fasthttp.ReleaseRequest(req)
+	return res, nil
 }
 
 func (r *ExchangerRequests) Get(ctx context.Context, body map[string]interface{}) (*fasthttp.Response, error) {
