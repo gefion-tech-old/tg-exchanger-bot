@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/config"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/modules/base"

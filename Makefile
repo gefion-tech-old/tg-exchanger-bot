@@ -10,10 +10,9 @@ init:
 .PHONY: run
 
 run:
-	go build -o $(SERVICE) -v $(SOURCES)
+	go build -o $(SERVICE) main.go
 	clear		
-	./$(SERVICE)
-
+	./$(SERVICE) run
 
 .PHONY: build
 

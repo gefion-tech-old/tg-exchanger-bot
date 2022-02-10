@@ -3,7 +3,7 @@ package keyboards
 import (
 	"fmt"
 
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/core/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )

@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/config"
 	"github.com/go-redis/redis/v7"
 )
 

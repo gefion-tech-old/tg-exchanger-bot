@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/core/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/tools"

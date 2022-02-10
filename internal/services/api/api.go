@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/config"
 	"github.com/sirupsen/logrus"
 )
 

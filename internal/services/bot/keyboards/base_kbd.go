@@ -1,7 +1,7 @@
 package keyboards
 
 import (
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/core/static"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 

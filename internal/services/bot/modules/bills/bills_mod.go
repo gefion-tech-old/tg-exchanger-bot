@@ -3,7 +3,7 @@ package bills
 import (
 	"context"
 
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/config"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/models"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"

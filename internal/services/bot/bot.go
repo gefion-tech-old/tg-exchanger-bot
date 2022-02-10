@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/config"
-	"github.com/gefion-tech/tg-exchanger-bot/internal/app/static"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/config"
+	"github.com/gefion-tech/tg-exchanger-bot/internal/core/static"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/api"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/commands"
 	"github.com/gefion-tech/tg-exchanger-bot/internal/services/bot/keyboards"
